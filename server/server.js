@@ -302,6 +302,16 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+app.get('/api/usuarios', checkSession, async (req, res) => {
+    try {
+      const [rows] = await pool.query('SELECT * FROM USUARIOS');
+      res.json({ success: true, usuarios: rows });
+    } catch (err) {
+      console.error("Erro ao buscar usuários:", err);
+      res.status(500).json({ success: false, message: "Erro ao buscar usuários" });
+    }
+  });
+
 app.post('/api/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) {
