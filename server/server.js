@@ -9,8 +9,7 @@ const { title } = require('process');
 require('dotenv').config({ path: 'config.env' });
 
 const app = express();
-const PORT = 3000;
-const HOST = '172.16.32.16';
+const PORT = process.env.PORT || 3000;
 
 // 1. Configuração básica do Express
 app.use(express.json());
@@ -18,7 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
 app.use(cors({
-    origin: ['http://172.16.32.16:3000', 'http://localhost:3000'], // Adicione outros domínios se necessário
+    origin: ['https://app.grupoconcresul.com.br', 'http://localhost:3000'], // Coloque o domínio real aqui
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
@@ -34,7 +33,6 @@ app.use(session({
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
         sameSite: 'lax', // Importante para cross-site cookies
-        domain: '172.16.32.16' // Especifique seu domínio
     }
 }));
 
@@ -1309,6 +1307,6 @@ app.use((err, req, res, next) => {
 });
 
 // Iniciar servidor
-app.listen(PORT, HOST, () => {
-    console.log(`Servidor rodando em http://${HOST}:${PORT}`);
-});
+app.listen(PORT, () => {
+    console.log(`Servidor rodando na porta ${PORT}`);
+  });
