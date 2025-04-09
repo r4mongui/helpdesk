@@ -63,6 +63,7 @@ const sessionStore = new MySQLStore({}, pool);
 
 app.use(session({
     secret: 'grupo_concresul',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
