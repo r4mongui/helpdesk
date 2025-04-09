@@ -114,10 +114,11 @@
     </main>
 
     <script>
+        const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
         // Verificação de autenticação
         async function checkAuth() {
             try {
-                const response = await fetch('/api/check-auth', {
+                const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                     credentials: 'include'
                 });
                 
@@ -188,7 +189,7 @@
             try {
                 const formData = new FormData(form);
                 
-                const response = await fetch('/api/chamados', {
+                const response = await fetch(`${API_BASE_URL}/api/chamados`, {
                     method: 'POST',
                     credentials: 'include',
                     body: formData
@@ -272,7 +273,7 @@
             document.getElementById('logout-link')?.addEventListener('click', async function(e) {
                 e.preventDefault();
                 try {
-                    const response = await fetch('/api/logout', {
+                    const response = await fetch(`${API_BASE_URL}/api/logout`, {
                         method: 'POST',
                         credentials: 'include'
                     });

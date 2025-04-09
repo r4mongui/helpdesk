@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com'
+
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('loginForm') ? initLoginPage() : initAdminPage();
 });
@@ -13,7 +15,7 @@ async function initLoginPage() {
         const { username, password } = e.target.elements;
         
         try {
-            const response = await fetch('/api/admin/login', {
+            const response = await fetch(`${API_BASE_URL}/api/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -38,8 +40,8 @@ async function initLoginPage() {
 async function initAdminPage() {
     try {
         const [authResponse, permResponse] = await Promise.all([
-            fetch('/api/admin/check-auth'),
-            fetch('/api/admin/check-permissions')
+            fetch(`${API_BASE_URL}/api/admin/check-auth`),
+            fetch(`${API_BASE_URL}/api/admin/check-permissions`)
         ]);
         
         const [authData, permData] = await Promise.all([
@@ -70,7 +72,7 @@ function redirectToLogin() {
 
 async function loadAdminInfo() {
     try {
-        const response = await fetch('/api/admin/user-info');
+        const response = await fetch(`${API_BASE_URL}/api/admin/user-info`);
         const { success, usuario } = await response.json();
         
         if (success) {
@@ -167,7 +169,7 @@ function setupAdminPage() {
 
     async function handleLogout() {
         try {
-            await fetch('/api/admin/logout', { method: 'POST' });
+            await fetch(`${API_BASE_URL}/api/admin/logout`, { method: 'POST' });
             redirectToLogin();
         } catch (error) {
             console.error('Erro ao fazer logout:', error);
@@ -183,7 +185,7 @@ function setupAdminPage() {
                 search: elements.searchFilter.value
             });
             
-            const response = await fetch(`/api/admin/chamados?${params.toString()}`);
+            const response = await fetch(`${API_BASE_URL}/api/admin/chamados?${params.toString()}`);
             const { success, chamados: fetchedChamados, message } = await response.json();
             
             if (success) {
@@ -337,7 +339,7 @@ function setupAdminPage() {
         }
         
         try {
-            const response = await fetch(`/api/admin/chamados/${currentChamadoId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/chamados/${currentChamadoId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status, resolucao })

@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com'
+
 document.addEventListener('DOMContentLoaded', () => {
     initUsersPage();
 });
@@ -6,8 +8,8 @@ async function initUsersPage() {
     // Verificar autenticação e permissões (código similar ao admin.js)
     try {
         const [authResponse, permResponse] = await Promise.all([
-            fetch('/api/admin/check-auth'),
-            fetch('/api/admin/check-permissions')
+            fetch(`${API_BASE_URL}/api/admin/check-auth`),
+            fetch(`${API_BASE_URL}/api/admin/check-permissions`)
         ]);
         
         const [authData, permData] = await Promise.all([
@@ -38,7 +40,7 @@ function redirectToLogin() {
 
 async function loadAdminInfo() {
     try {
-        const response = await fetch('/api/admin/user-info');
+        const response = await fetch(`${API_BASE_URL}/api/admin/user-info`);
         const { success, usuario } = await response.json();
         
         if (success) {
@@ -165,7 +167,7 @@ function setupUsersPage() {
 
     async function handleLogout() {
         try {
-            await fetch('/api/admin/logout', { method: 'POST' });
+            await fetch(`${API_BASE_URL}/api/admin/logout`, { method: 'POST' });
             redirectToLogin();
         } catch (error) {
             console.error('Erro ao fazer logout:', error);
@@ -180,7 +182,7 @@ function setupUsersPage() {
                 search: elements.searchFilter.value
             });
             
-            const response = await fetch(`/api/admin/users?${params.toString()}`);
+            const response = await fetch(`${API_BASE_URL}/api/admin/users?${params.toString()}`);
             const { success, users: fetchedUsers, message } = await response.json();
             
             if (success) {
@@ -327,7 +329,9 @@ function setupUsersPage() {
         if (photoFile) formData.append('photo', photoFile);
         
         try {
-            const url = userId ? `/api/admin/users/${userId}` : '/api/admin/users';
+            const url = userId 
+                ? `${API_BASE_URL}/api/admin/users/${userId}` 
+                : `${API_BASE_URL}/api/admin/users`;
             const method = userId ? 'PUT' : 'POST';
             
             const response = await fetch(url, {
@@ -358,7 +362,7 @@ function setupUsersPage() {
     
     async function deleteUser(userId) {
         try {
-            const response = await fetch(`/api/admin/users/${userId}`, {
+            const response = await fetch(`${API_BASE_URL}/api/admin/users/${userId}`, {
                 method: 'DELETE'
             });
             

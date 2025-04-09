@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     // Cache de elementos DOM (mantido igual)
     const elements = {
@@ -60,7 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificação de autenticação
     async function checkAuth() {
         try {
-            const response = await fetch('/api/check-auth', {
+            const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                 credentials: 'include'
             });
             
@@ -84,7 +86,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Carregar dados do usuário
     async function carregarDadosUsuario() {
         try {
-            const response = await fetch('/api/usuario/dados', {
+            const response = await fetch(`${API_BASE_URL}/api/usuario/dados`, {
                 credentials: 'include'
             });
             
@@ -106,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             elements.chamadosContainer.innerHTML = '<div class="loading">Carregando chamados...</div>';
             
-            const response = await fetch(`/api/chamados?status=${status}&urgencia=${urgencia}`, {
+            const response = await fetch(`${API_BASE_URL}/api/chamados?status=${status}&urgencia=${urgencia}`, {
                 credentials: 'include'
             });
             
@@ -243,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Logout
     async function handleLogout() {
         try {
-            const response = await fetch('/api/logout', {
+            const response = await fetch(`${API_BASE_URL}/api/logout`, {
                 method: 'POST',
                 credentials: 'include'
             });

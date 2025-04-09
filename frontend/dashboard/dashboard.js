@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos DOM
     const elements = {
@@ -142,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Verificação de autenticação
     async function verificarAutenticacao() {
         try {
-            const response = await fetch('/api/check-auth', {
+            const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
                 credentials: 'include'
             });
             

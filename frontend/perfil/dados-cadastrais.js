@@ -1,8 +1,8 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     // Elementos do DOM
     const form = document.getElementById('dadosForm');
-    const btnCancelar = document.getElementById('btnCancelar');
-    const btnLogout = document.getElementById('logout');
     const fotoUsuario = document.getElementById('fotoUsuario');
     const uploadFoto = document.getElementById('uploadFoto');
     const nomeUsuario = document.getElementById('nomeUsuario');
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function carregarDadosUsuario() {
         try {
-            const response = await fetch('/api/usuario/dados', {
+            const response = await fetch(`${API_BASE_URL}/api/usuario/dados`, {
                 method: 'GET',
                 credentials: 'include'
             });
@@ -131,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
         formData.append('foto', file);
         
         try {
-            const response = await fetch('/api/upload-photo', {
+            const response = await fetch(`${API_BASE_URL}/api/upload-photo`, {
                 method: 'POST',
                 credentials: 'include',
                 body: formData
@@ -162,7 +162,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     
         try {
-            const response = await fetch('/api/usuario/dados', {
+            const response = await fetch(`${API_BASE_URL}/api/usuario/dados`, {
                 method: 'PUT',
                 credentials: 'include',
                 headers: {
@@ -191,7 +191,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Verificar autenticação ao carregar a página
-    fetch('/api/check-auth', {
+    fetch(`${API_BASE_URL}/api/check-auth`, {
         credentials: 'include'
     })
     .then(response => {

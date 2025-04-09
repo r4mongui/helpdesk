@@ -1,4 +1,6 @@
-fetch("/login", {
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+
+fetch(`${API_BASE_URL}/login`, {
     method: "POST",
     headers: {
         "Content-Type": "application/json"

@@ -1,3 +1,5 @@
+const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('redefinicao');
     const mensagemErro = document.getElementById('mensagem-erro');
@@ -20,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         try {
-            const response = await fetch('/api/redefinir-senha', {  // Use caminho relativo
+            const response = await fetch(`${API_BASE_URL}/api/redefinir-senha`, {  // Use caminho relativo
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
