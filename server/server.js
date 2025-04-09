@@ -9,7 +9,7 @@ require('dotenv').config({ path: 'config.env' });
 
 // Configuração do banco de dados MySQL
 const dbConfig = {
-    host: process.env.DB_HOST || 'mysql.railway.internal',
+    host: process.env.DB_HOST || 'mainline.proxy.rlwy.net',
     user: process.env.DB_USER || 'root',
     password: process.env.DB_PASSWORD || 'YWXjCNEWcScaVlSuOYDppTmNKqhnTEhN',
     database: process.env.DB_NAME || 'railway',
