@@ -3,10 +3,24 @@ const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
 const multer = require('multer');
-const sql = require('mssql');
+const sql = require('mysql2/promise');
 const fs = require('fs');
 const { title } = require('process');
 require('dotenv').config({ path: 'config.env' });
+
+let db;
+
+(async () => {
+    db = await mysql.createConnection({
+        host: 'mysql.railway.internal',
+        user: 'root',
+        password: 'YWXjCNEWcScaVlSuOYDppTmNKqhnTEhN',
+        database: 'railway',
+        port: 3306
+    });
+
+    console.log('Conectado ao banco MySQL da RailWay');
+})();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
