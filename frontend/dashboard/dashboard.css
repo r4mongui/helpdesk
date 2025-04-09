@@ -1,0 +1,557 @@
+/* Importando a fonte Montserrat */
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@100..900&display=swap');
+
+/* Estilos gerais */
+body {
+    font-family: Montserrat, sans-serif;
+    background-color: rgb(242, 241, 241);
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    grid-template-areas:
+        "nav header"
+        "nav main";
+    grid-template-columns: 260px 1fr;
+    grid-template-rows: auto 1fr;
+    overflow: hidden;
+}
+
+/* NAV LATERAL (Sidebar) */
+.nav-lateral {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    width: 260px;
+    background-color: white;
+    padding: 20px 0;
+    transition: width 0.2s ease-in-out;
+    overflow: hidden;
+}
+
+/* Quando a sidebar está recolhida */
+.nav-lateral.collapsed {
+    width: 80px;
+    padding-top: 30px;
+}
+
+.nav-lateral.collapsed .toggle-btn {
+    margin-top: 10px;
+    transform: rotate(180deg);
+}
+
+.nav-lateral.collapsed ul li {
+    padding: 15px 0;
+}
+
+.nav-lateral.collapsed ul li a span {
+    display: none;
+}
+
+/* Estilização da lista de navegação */
+.nav-lateral ul {
+    list-style-type: none;
+    padding-left: 20px;
+    margin: 0;
+    width: 100%;
+}
+
+.nav-lateral ul li {
+    padding: 15px 0;
+}
+
+.nav-lateral ul li a {
+    display: flex;
+    align-items: center;
+    font-size: 20px;
+    text-decoration: none;
+    color: black;
+    width: calc(100% - 20px);
+    padding-left: 10px;
+    margin-top: 30px;
+}
+
+.nav-lateral ul li a i {
+    margin-right: 15px;
+}
+
+/* Título da navegação */
+.nav-header a h1{
+    margin: 0;
+    white-space: nowrap;
+    font-size: 1.4rem;
+    line-height: 1.3;
+    color: #1d4b69;
+    text-decoration: none;
+}
+
+.nav-header a {
+    text-decoration: none;
+}
+
+.nav-lateral .toggle-btn {
+    margin-right: 43px;
+}
+
+.nav-lateral.collapsed a h1 {
+    display: none;
+}
+
+/* Item ativo na navegação */
+.nav-lateral ul li a.active {
+    color: #1d4b69;
+    position: relative;
+    padding-left: 10px;
+}
+
+.nav-lateral .financeiro{
+    transition: 0.2s ease-in-out;
+}
+
+.nav-lateral .financeiro:hover{
+    color: #1d4b69;
+}
+
+.nav-lateral ul li a.active::before {
+    content: '';
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    height: 250%;
+    width: 5px;
+    background-color: #1d4b69;
+    border-radius: 0 4px 4px 0;
+    transform: translateY(-50%);
+}
+
+/* Botão de alternância (toggle) */
+.toggle-btn {
+    font-size: 1.2em;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: #333;
+    transition: transform 0.6s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+}
+
+.nav-lateral.collapsed .toggle-btn {
+    transform: rotate(180deg);
+}
+
+/* HEADER PRINCIPAL */
+header {
+    grid-area: header;
+    background-color: rgb(242, 241, 241);
+    padding: 10px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    margin-left: 0;
+}
+
+.nav-lateral.collapsed ~ header {
+    margin-left: -140px; /* 260px - 80px */
+    transition: margin-left 0.3s ease;
+}
+
+/* Cabeçalho da navegação lateral */
+.nav-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 20px;
+    margin-bottom: 40px;
+}
+
+.nav-header h1 {
+    font-size: 1.4em;
+    flex-grow: 1;
+}
+
+/* NAVEGAÇÃO PRINCIPAL */
+.nav-principal {
+    padding-top: 40px;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-principal h1 {
+    color: gray;
+    font-weight: 500;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: default;
+}
+
+.nav-principal ul {
+    list-style-type: none;
+    display: flex;
+    align-items: center;
+    gap: 50px;
+    margin: 0;
+    padding: 0;
+    margin-right: 20px;
+    font-size: 18px;
+}
+
+.nav-principal ul li a {
+    text-decoration: none;
+    color: black;
+    transition: color 0.2s;
+}
+
+.nav-principal ul li a:hover {
+    color: #1d4b69;
+}
+
+/* MENU DE PERFIL */
+.perfil, .avisos {
+    position: relative;
+}
+
+.perfil-trigger {
+    display: flex;
+    align-items: center;
+    background-color: none;
+    border: none;
+    font-family: Montserrat;
+    font-size: 18px;
+    cursor: pointer;
+    transition: 0.2s ease-in-out;
+    gap: 15px;
+}
+
+.perfil-trigger:hover {
+    color: #1d4b69;
+}
+
+.perfil .submenu {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: white;
+    padding: 15px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    display: none;
+    min-width: 150px;
+    z-index: 1000;
+    margin-top: 10px;
+}
+
+.perfil .submenu.active {
+    display: block;
+    animation: fadeIn 0.3s ease forwards;
+}
+
+.perfil .submenu li {
+    padding: 8px 0;
+}
+
+.perfil .submenu li a {
+    display: block;
+    color: #333;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.perfil .submenu li a:hover {
+    color: #1d4b69;
+}
+
+.perfil .fa-chevron-down {
+    transition: transform 0.3s ease;
+    font-size: 0.8rem;
+}
+
+.perfil.active .fa-chevron-down {
+    transform: rotate(180deg);
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.nav-lateral.collapsed ~ header .nav-principal h1 {
+    margin-left: -40px;
+}
+
+main {
+    grid-area: main;
+    padding: 20px 20px 20px 40px; /* Ajuste no padding-left */
+    overflow-y: auto;
+    height: calc(100vh - 60px);
+    margin-left: 0; /* Garante que não há margem extra */
+}
+
+.nav-lateral.collapsed ~ main {
+    margin-left: -160px;
+    padding-left: 20px;
+    transition: all 0.3s ease;
+}
+
+main h2{
+    color: #1d4b69;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+main h2 i{
+    margin-right: 10px;
+}
+
+.nav-lateral.collapsed ~ main .container-chamado {
+    margin-left: 80px; /* Largura da sidebar recolhida */
+    width: calc(100% - 100px); /* 80 + 20 */
+}
+
+.container-chamado {
+    padding: 20px;
+    border-radius: 8px;
+    min-height: 200px;
+    margin-left: 0; /* Remove margem esquerda extra */
+    width: auto;
+}
+
+.form-chamado {
+    background: white;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); /* Garante que as colunas não estourem */
+    gap: 15px 60px;
+    width: 100%;
+    box-sizing: border-box;
+    max-height: calc(100vh - 200px);
+    overflow-y: auto;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group:not(.radio-group-container) {
+    grid-column: span 2;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group.titulo,
+.form-group.descricao,
+.form-group.telefone {
+    grid-column: 1;
+}
+
+.form-group input[type="text"],
+.form-group input[type="tel"],
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    transition: border 0.3s;
+}
+
+.form-group input[type="text"]:focus,
+.form-group input[type="tel"]:focus,
+.form-group textarea:focus {
+    border-color: #1d4b69;
+    outline: none;
+}
+
+.form-group textarea {
+    min-height: 150px; /* Reduzi a altura */
+    resize: vertical;
+}
+
+/* Estilos para os radios de urgência */
+.radio-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px; /* Reduzi o espaçamento */
+}
+
+.radio-group-container {
+    grid-column: 2;
+    grid-row: 3 / span 3;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.radio-option {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    margin: 5px 0;
+}
+
+.radio-option input[type="radio"] {
+    display: none;
+}
+
+.radio-custom {
+    width: 8px;  /* Aumentei de 24px */
+    height: 8px; /* Aumentei de 24px */
+    border-radius: 50%;
+    border: 2px solid #ddd;
+    position: relative;
+    transition: all 0.3s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.radio-custom::after {
+    content: '';
+    position: absolute;
+    width: 16px;  /* Aumentei de 12px */
+    height: 16px; /* Aumentei de 12px */
+    border-radius: 50%;
+    background: transparent;
+    transition: all 0.3s;
+    transform: scale(0); /* Inicia escondido */
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom {
+    border-color: currentColor;
+}
+
+.radio-option input[type="radio"]:checked + .radio-custom::after {
+    transform: scale(1); /* Aparece quando selecionado */
+}
+
+.radio-option .baixa { color: #4CAF50; }
+.radio-option .media { color: #FFC107; }
+.radio-option .alta { color: #FF9800; }
+.radio-option .critica { color: #F44336; }
+
+/* Estilos para upload de arquivo */
+.file-upload {
+    margin-top: 10px;
+}
+
+.file-upload input[type="file"] {
+    display: none;
+}
+
+.upload-btn {
+    display: inline-block;
+    padding: 10px 15px;
+    background: #f0f0f0;
+    color: #333;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+    border: 1px dashed #ccc;
+}
+
+.upload-btn:hover {
+    background: #e0e0e0;
+}
+
+.upload-btn i {
+    margin-right: 8px;
+}
+
+#file-name {
+    display: block;
+    margin-top: 8px;
+    font-size: 14px;
+    color: #666;
+}
+
+/* Botão de enviar */
+.btn-enviar {
+    background: #1d4b69;
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    font-size: 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 0;
+    width: 100%;
+    justify-content: center;
+    margin-top: auto;
+    margin-bottom: 21.5px;
+}
+
+.btn-enviar:hover {
+    background: #143649;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container-chamado {
+        margin-left: 0;
+        padding: 20px;
+    }
+    
+    .nav-lateral.collapsed ~ main .container-chamado {
+        margin-left: 0;
+    }
+    
+    .radio-group {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+
+/* Container dos elementos da direita */
+.side-options {
+    grid-column: 2;
+    grid-row: 1 / span 3;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

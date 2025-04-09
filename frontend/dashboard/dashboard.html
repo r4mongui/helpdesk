@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Grupo Concresul</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="dashboard.css">
+    <link rel="shortcut icon" href="../images/grupoconcresul.ico" type="image/x-icon">
+    <script defer src="dashboard.js"></script>
+</head>
+<body>
+    <div aria-live="polite" class="sr-only" aria-atomic="true"></div>
+    
+    <nav class="nav-lateral" aria-label="Menu lateral">
+        <div class="nav-header">
+            <a href="/dashboard/dashboard.html" aria-current="page">
+                <h1>GRUPO<br>CONCRESUL</h1>
+            </a>
+            <button class="toggle-btn" aria-label="Abrir/Fechar menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>        
+        </div>
+        <ul>
+            <li><a href="#" class="active" aria-current="page"><i class="fas fa-home"></i><span>Início</span></a></li>
+            <li><a href="../chamados/chamados.html" class="financeiro"><i class="fas fa-book"></i><span>Chamados</span></a></li>
+        </ul>        
+    </nav>
+
+    <header>
+        <nav class="nav-principal" aria-label="Menu principal">
+            <h1><i class="fas fa-home"></i> Início</h1>
+            <ul>
+                <li class="perfil">
+                    <button class="perfil-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="submenu-perfil">
+                        <i class="fas fa-user"></i> Perfil <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="submenu" id="submenu-perfil" role="menu">
+                        <li role="none"><a href="/perfil/dados-cadastrais.html" role="menuitem">Meus Dados</a></li>
+                        <li role="none"><a href="/password/password.html" role="menuitem">Redefinir Senha</a></li>
+                        <li role="none"><a href="/login/login.html" id="logout-link" role="menuitem">Sair</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container-chamado">
+        <div id="message-container" role="alert"></div>
+        
+        <h2><i class="fas fa-plus-circle"></i> Abrir Novo Chamado</h2>
+        <form class="form-chamado" id="formChamado" novalidate>
+            <!-- Campos da esquerda -->
+            <div class="form-group titulo">
+                <label for="titulo">Título*</label>
+                <input type="text" id="titulo" name="titulo" required minlength="5" aria-describedby="titulo-help">
+            </div>
+    
+            <div class="form-group descricao">
+                <label for="descricao">Descrição*</label>
+                <textarea id="descricao" name="descricao" rows="5" required minlength="10" aria-describedby="descricao-help"></textarea>
+            </div>
+    
+            <div class="form-group telefone">
+                <label for="telefone">Telefone para Contato*</label>
+                <input type="tel" id="telefone" name="telefone" required pattern="\(\d{2}\) \d{4,5}-\d{4}" aria-describedby="telefone-help">
+            </div>
+    
+            <!-- Elementos da direita -->
+            <div class="side-options">
+                <fieldset class="form-group">
+                    <legend>Urgência*</legend>
+                    <div class="radio-group" role="radiogroup">
+                        <label class="radio-option">
+                            <input type="radio" name="urgencia" value="1" checked aria-checked="true" role="radio">
+                            <span class="radio-custom baixa"></span>
+                            Baixa
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="urgencia" value="2" aria-checked="false" role="radio">
+                            <span class="radio-custom media"></span>
+                            Média
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="urgencia" value="3" aria-checked="false" role="radio">
+                            <span class="radio-custom alta"></span>
+                            Alta
+                        </label>
+                        <label class="radio-option">
+                            <input type="radio" name="urgencia" value="4" aria-checked="false" role="radio">
+                            <span class="radio-custom critica"></span>
+                            Crítica
+                        </label>
+                    </div>
+                </fieldset>
+    
+                <div class="form-group">
+                    <label for="imagem">Anexar Imagem (Opcional)</label>
+                    <div class="file-upload">
+                        <input type="file" id="imagem" name="imagem" accept="image/*" aria-describedby="imagem-help">
+                        <label for="imagem" class="upload-btn">
+                            <i class="fas fa-cloud-upload-alt"></i> Selecione uma imagem
+                        </label>
+                        <span id="file-name">Nenhum arquivo selecionado</span>
+                        <small id="imagem-help" class="help-text">Formatos aceitos: JPG, PNG (max. 5MB)</small>
+                    </div>
+                </div>
+    
+                <button type="submit" class="btn-enviar" aria-live="polite">
+                    <i class="fas fa-paper-plane"></i> Enviar Chamado
+                </button>
+            </div>
+        </form>
+    </main>
+
+    <script>
+        // Verificação de autenticação
+        async function checkAuth() {
+            try {
+                const response = await fetch('/api/check-auth', {
+                    credentials: 'include'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                if (!data?.authenticated) {
+                    throw new Error('Usuário não autenticado');
+                }
+            } catch (error) {
+                console.error('Erro na verificação de autenticação:', error);
+                window.location.href = '/login/login.html';
+            }
+        }
+
+        // Mostrar mensagem para o usuário
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('message-container');
+            const messageDiv = document.createElement('div');
+            
+            messageDiv.className = `message ${type}`;
+            messageDiv.setAttribute('role', 'alert');
+            messageDiv.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check' : 'exclamation'}-circle"></i>
+                <span>${message}</span>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            // Anunciar para leitores de tela
+            document.querySelector('.sr-only').textContent = message;
+            
+            // Remover após 5 segundos
+            setTimeout(() => {
+                messageDiv.classList.add('fade-out');
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 5000);
+        }
+
+        // Formatar telefone
+        function formatPhoneInput(input) {
+            let value = input.value.replace(/\D/g, '');
+            if (value.length > 11) value = value.substring(0, 11);
+            
+            if (value.length > 0) {
+                value = value.replace(/^(\d{2})(\d)/g, '($1) $2');
+                if (value.length > 10) {
+                    value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+                } else {
+                    value = value.replace(/(\d)(\d{4})$/, '$1-$2');
+                }
+            }
+            
+            input.value = value;
+        }
+
+        // Enviar formulário
+        async function submitForm(form) {
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // Mostrar loading
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+            submitBtn.disabled = true;
+            
+            try {
+                const formData = new FormData(form);
+                
+                const response = await fetch('/api/chamados', {
+                    method: 'POST',
+                    credentials: 'include',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erro ao enviar chamado');
+                }
+                
+                const data = await response.json();
+                showMessage('Chamado enviado com sucesso!');
+                form.reset();
+                document.getElementById('file-name').textContent = 'Nenhum arquivo selecionado';
+                
+            } catch (error) {
+                console.error('Erro ao enviar chamado:', error);
+                showMessage(error.message, 'error');
+            } finally {
+                // Restaurar botão
+                submitBtn.innerHTML = originalBtnText;
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Validação em tempo real
+        function setupValidation() {
+            const form = document.getElementById('formChamado');
+            
+            form.querySelectorAll('input, textarea').forEach(input => {
+                input.addEventListener('input', function() {
+                    if (this.checkValidity()) {
+                        this.classList.remove('invalid');
+                    } else {
+                        this.classList.add('invalid');
+                    }
+                });
+            });
+            
+            // Validação customizada para telefone
+            document.getElementById('telefone').addEventListener('input', function(e) {
+                formatPhoneInput(e.target);
+                if (e.target.checkValidity()) {
+                    e.target.classList.remove('invalid');
+                } else {
+                    e.target.classList.add('invalid');
+                }
+            });
+        }
+
+        // Inicialização quando o DOM estiver pronto
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar autenticação
+            checkAuth();
+            
+            // Configurar validação
+            setupValidation();
+            
+            // Gerenciar upload de arquivo
+            document.getElementById('imagem').addEventListener('change', function(e) {
+                const fileName = e.target.files[0] 
+                    ? e.target.files[0].name 
+                    : "Nenhum arquivo selecionado";
+                document.getElementById('file-name').textContent = fileName;
+            });
+            
+            // Enviar formulário
+            document.getElementById('formChamado').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                if (!this.checkValidity()) {
+                    this.classList.add('validated');
+                    showMessage('Por favor, preencha todos os campos corretamente.', 'error');
+                    return;
+                }
+                
+                await submitForm(this);
+            });
+            
+            // Logout
+            document.getElementById('logout-link')?.addEventListener('click', async function(e) {
+                e.preventDefault();
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (response.ok) {
+                        window.location.href = '/login/login.html';
+                    } else {
+                        console.warn('Falha ao fazer logout, redirecionando...');
+                        window.location.href = '/login/login.html';
+                    }
+                } catch (error) {
+                    console.error('Erro ao fazer logout:', error);
+                    window.location.href = '/login/login.html';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
