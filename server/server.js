@@ -9,11 +9,11 @@ require('dotenv').config({ path: 'config.env' });
 
 // Configuração do banco de dados MySQL
 const dbConfig = {
-    host: process.env.DB_HOST || 'mainline.proxy.rlwy.net',
+    host: process.env.DB_HOST || 'trolley.proxy.rlwy.net',
     user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'YWXjCNEWcScaVlSuOYDppTmNKqhnTEhN',
+    password: process.env.DB_PASSWORD || 'SxVUtIIcKUkcgkHzXiSowGpazMLuCpLy',
     database: process.env.DB_NAME || 'railway',
-    port: parseInt(process.env.DB_PORT) || 3306,
+    port: parseInt(process.env.DB_PORT) || 26037,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
