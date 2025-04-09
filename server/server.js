@@ -8,19 +8,27 @@ const fs = require('fs');
 require('dotenv').config({ path: 'config.env' });
 
 // Configuração do banco de dados MySQL
-const dbConfig = {
-    host: process.env.DB_HOST || 'interchange.proxy.rlwy.net',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'dvyGvZfypklSjbzhNuqytVtTfERErqyR',
-    database: process.env.DB_NAME || 'railway',
-    port: parseInt(process.env.DB_PORT) || 26037,
+const pool = mysql.createPool({
+    host: 'interchange.proxy.rlwy.net',
+    port: 19905,
+    user: 'root',
+    password: 'dvyGvZfypklSjbzhNuqytVtTfERErqyR',
+    database: 'railway',
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
-};
+  });
 
-// Criar pool de conexões
-const pool = mysql.createPool(dbConfig);
+  (async () => {
+    try {
+      const conn = await pool.getConnection();
+      const [rows] = await conn.query('SELECT 1');
+      console.log('✅ MySQL está respondendo!');
+      conn.release();
+    } catch (error) {
+      console.error('Erro ao conectar ao MySQL:', error);
+    }
+  })();
 
 // Testar conexão
 pool.getConnection()
