@@ -3,27 +3,39 @@ const path = require('path');
 const session = require('express-session');
 const cors = require('cors');
 const multer = require('multer');
-const sql = require('mysql2/promise');
+const mysql = require('mysql2/promise');
 const fs = require('fs');
-const { title } = require('process');
 require('dotenv').config({ path: 'config.env' });
 
-let db;
+// Configuração do banco de dados MySQL
+const dbConfig = {
+    host: process.env.DB_HOST || 'mysql.railway.internal',
+    user: process.env.DB_USER || 'root',
+    password: process.env.DB_PASSWORD || 'YWXjCNEWcScaVlSuOYDppTmNKqhnTEhN',
+    database: process.env.DB_NAME || 'railway',
+    port: parseInt(process.env.DB_PORT) || 3306,
+    waitForConnections: true,
+    connectionLimit: 10,
+    queueLimit: 0
+};
 
-(async () => {
-    db = await mysql.createConnection({
-        host: 'mysql.railway.internal',
-        user: 'root',
-        password: 'YWXjCNEWcScaVlSuOYDppTmNKqhnTEhN',
-        database: 'railway',
-        port: 3306
+// Criar pool de conexões
+const pool = mysql.createPool(dbConfig);
+
+// Testar conexão
+pool.getConnection()
+    .then(conn => {
+        console.log('✅ Conectado ao banco MySQL');
+        conn.release();
+    })
+    .catch(err => {
+        console.error('Erro ao conectar ao MySQL:', err);
+        process.exit(1);
     });
-
-    console.log('Conectado ao banco MySQL da RailWay');
-})();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || 'localhost';
 
 // 1. Configuração básica do Express
 app.use(express.json());
@@ -31,26 +43,31 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
 app.use(cors({
-    origin: ['https://app.grupoconcresul.com.br', 'http://localhost:3000'], // Coloque o domínio real aqui
+    origin: ['https://app.grupoconcresul.com.br', 'http://localhost:3000'],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
-// 3. Configuração de sessão
+// 3. Configuração de sessão (usando store MySQL)
+const MySQLStore = require('express-mysql-session')(session);
+const sessionStore = new MySQLStore({}, pool);
+
 app.use(session({
+    key: 'session_cookie_name',
     secret: 'grupo_concresul',
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: { 
         secure: false, // true se estiver usando HTTPS
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: 'lax', // Importante para cross-site cookies
+        sameSite: 'lax',
     }
 }));
 
-// 4. Middleware para servir arquivos estáticos CORRETAMENTE
+// 4. Middleware para servir arquivos estáticos
 const staticOptions = {
     setHeaders: (res, filePath) => {
         const mimeTypes = {
@@ -72,7 +89,7 @@ const staticOptions = {
     }
 };
 
-// 5. Configurar rotas estáticas PRIMEIRO
+// 5. Configurar rotas estáticas
 app.use('/dashboard', express.static(
     path.join(__dirname, '..', 'frontend', 'dashboard'), 
     staticOptions
@@ -102,7 +119,6 @@ app.use('/uploads', express.static(
     path.join(__dirname, '..', 'uploads'),
     {
         setHeaders: (res, path) => {
-            // Permite acesso às imagens de qualquer origem (CORS)
             res.set('Access-Control-Allow-Origin', '*');
         }
     }
@@ -123,11 +139,10 @@ app.use('/admin/usuarios', express.static(
     staticOptions
 ));
 
-// 6. Rotas principais que DEVEM vir depois dos arquivos estáticos
+// 6. Rotas principais
 app.get('/', (req, res) => {
     const filePath = path.join(__dirname, '..', 'frontend', 'login', 'login.html');
     
-    // Verifica se o arquivo existe antes de enviar
     fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
             console.error('Arquivo não encontrado:', filePath);
@@ -153,88 +168,59 @@ app.get('/api/check-image/:filename', async (req, res) => {
     }
 });
 
-app.get('/dashboard', checkSession, (req, res, next) => {
-    const filePath = path.join(__dirname, '..', 'frontend', 'dashboard', 'dashboard.html');
-    
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-            console.error('Arquivo não encontrado:', filePath);
-            // Remove o next() e usa apenas return com res.status()
-            return res.status(404).send('Página não encontrada');
-        }
-        // Envia o arquivo apenas uma vez
-        res.sendFile(filePath);
-    });
-});
-
-app.get('/password', (req, res) => {
-    res.sendFile(path.join(__dirname, '..', 'frontend', 'password', 'password.html'));
-});
-
-app.get('/dados-cadastrais', (req, res) => {
-    const filePath = path.join(__dirname, '..', 'frontend', 'perfil', 'dados-cadastrais.html');
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-            console.error('Arquivo não encontrado:', filePath);
-            return res.status(404).send('Página não encontrada');
-        }
-        res.sendFile(filePath);
-    });
-});
-
-app.get('/api/check-session', (req, res) => {
-    res.json({ 
-        authenticated: !!req.session.codUsuario,
-        userId: req.session.codUsuario,
-        sessionId: req.sessionID
-    });
-});
-
-// Configuração do banco de dados
-console.log("DB_SERVER:", process.env.DB_SERVER);
-const config = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    server: process.env.DB_SERVER,
-    port: parseInt(process.env.DB_PORT) || 3000,
-    database: process.env.DB_NAME,
-    options: {
-        encrypt: false,
-        trustServerCertificate: true
-    }
-};
-
-// Pool de conexão com o banco
-const poolPromise = new sql.ConnectionPool(config)
-    .connect()
-    .then(pool => {
-        console.log("Conectado ao banco de dados");
-        return pool;
-    })
-    .catch(err => {
-        console.error("Erro ao conectar ao banco:", err);
-        process.exit(1);
-    });
-
-async function getPool() {
-    return await poolPromise;
-}
-
 // Middleware para verificar sessão
 function checkSession(req, res, next) {
     if (!req.session.codUsuario) {
         if (req.accepts('html')) {
-            // Retorna imediatamente com redirect
             return res.redirect('/login');
         }
-        // Retorna imediatamente com JSON
         return res.status(401).json({
             success: false, 
             message: "Não autenticado" 
         });
     }
-    // Só chama next() se o usuário estiver autenticado
     next();
+}
+
+// Middleware para verificar sessão de admin
+async function checkAdminSession(req, res, next) {
+    if (!req.session.codUsuario) {
+        if (req.accepts('html')) {
+            return res.redirect('/admin/admin-login.html');
+        }
+        return res.status(401).json({
+            success: false, 
+            message: "Não autenticado" 
+        });
+    }
+    
+    try {
+        const [rows] = await pool.query(
+            "SELECT ADMINISTRADOR FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [req.session.codUsuario]
+        );
+
+        if (rows.length > 0 && rows[0].ADMINISTRADOR === 1) {
+            return next();
+        } else {
+            if (req.accepts('html')) {
+                return res.redirect('/admin/admin-login.html');
+            }
+            return res.status(403).json({
+                success: false, 
+                message: "Acesso não autorizado" 
+            });
+        }
+    } catch (err) {
+        console.error("Erro ao verificar permissões de admin:", err);
+        if (req.accepts('html')) {
+            return res.redirect('/admin/admin-login.html');
+        }
+        return res.status(500).json({
+            success: false, 
+            message: "Erro ao verificar permissões" 
+        });
+    }
 }
 
 // Configuração do Multer para upload de imagens
@@ -273,15 +259,13 @@ app.post('/api/login', async (req, res) => {
     }
 
     try {
-        const pool = await getPool();
-        const result = await pool
-            .request()
-            .input('usuario', sql.VarChar, usuario)
-            .input('senha', sql.VarChar, senha)
-            .query("SELECT CODUSUARIO FROM USUARIOS WHERE usuario = @usuario AND senha = @senha");
+        const [rows] = await pool.query(
+            "SELECT CODUSUARIO FROM USUARIOS WHERE usuario = ? AND senha = ?", 
+            [usuario, senha]
+        );
 
-        if (result.recordset.length > 0) {
-            req.session.codUsuario = result.recordset[0].CODUSUARIO;
+        if (rows.length > 0) {
+            req.session.codUsuario = rows[0].CODUSUARIO;
             
             req.session.save(err => {
                 if (err) {
@@ -291,14 +275,12 @@ app.post('/api/login', async (req, res) => {
                         message: "Erro interno no servidor" 
                     });
                 }
-                // Apenas uma resposta é enviada
                 res.json({ 
                     success: true,
                     message: "Login bem-sucedido"
                 });
             });
         } else {
-            // Apenas uma resposta é enviada
             res.status(401).json({ 
                 success: false, 
                 message: "Usuário ou senha incorretos" 
@@ -306,7 +288,6 @@ app.post('/api/login', async (req, res) => {
         }
     } catch (err) {
         console.error("Erro no login:", err);
-        // Apenas uma resposta é enviada
         res.status(500).json({ 
             success: false, 
             message: "Erro interno do servidor",
@@ -321,7 +302,7 @@ app.post('/api/logout', (req, res) => {
             console.error('Erro ao destruir sessão:', err);
             return res.status(500).json({ success: false, message: 'Erro ao fazer logout' });
         }
-        res.clearCookie('connect.sid'); // Nome padrão do cookie de sessão
+        res.clearCookie('connect.sid');
         res.json({ success: true, message: 'Logout realizado com sucesso' });
     });
 });
@@ -346,22 +327,21 @@ app.post('/api/redefinir-senha', checkSession, async (req, res) => {
     }
 
     try {
-        const pool = await getPool();
         const codUsuario = req.session.codUsuario;
 
-        const userResult = await pool
-            .request()
-            .input('codUsuario', sql.Int, codUsuario)
-            .query("SELECT senha FROM USUARIOS WHERE CODUSUARIO = @codUsuario");
+        const [userRows] = await pool.query(
+            "SELECT senha FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [codUsuario]
+        );
         
-        if (userResult.recordset.length === 0) {
+        if (userRows.length === 0) {
             return res.status(404).json({ 
                 success: false, 
                 message: "Usuário não encontrado"
             });
         }
 
-        const senhaAtualNoBanco = userResult.recordset[0].senha;
+        const senhaAtualNoBanco = userRows[0].senha;
 
         if (senhaAtual !== senhaAtualNoBanco) {
             return res.status(401).json({ 
@@ -377,11 +357,10 @@ app.post('/api/redefinir-senha', checkSession, async (req, res) => {
             });
         }
 
-        await pool
-            .request()
-            .input('codUsuario', sql.Int, codUsuario)
-            .input('novaSenha', sql.VarChar, novaSenha)
-            .query("UPDATE USUARIOS SET senha = @novaSenha WHERE CODUSUARIO = @codUsuario");
+        await pool.query(
+            "UPDATE USUARIOS SET senha = ? WHERE CODUSUARIO = ?", 
+            [novaSenha, codUsuario]
+        );
 
         req.session.destroy();
 
@@ -435,26 +414,17 @@ app.post('/api/chamados', checkSession, upload.single('imagem'), async (req, res
             });
         }
 
-        const pool = await getPool();
-        
-        const result = await pool.request()
-            .input('titulo', sql.VarChar, titulo)
-            .input('descricao', sql.Text, descricao)
-            .input('telefone', sql.VarChar, telefone)
-            .input('urgencia', sql.Int, parseInt(urgencia))
-            .input('imagem', sql.VarChar, imagemPath)
-            .input('usuarioCriacao', sql.BigInt, usuarioCriacao)
-            .query(`
-                INSERT INTO CHAMADO 
-                (TITULO, DESCRICAO, TELEFONE, URGENCIA, IMAGEM, STATUS, DATACRIACAO, USUARIOCRIACAO) 
-                VALUES (@titulo, @descricao, @telefone, @urgencia, @imagem, 1, GETDATE(), @usuarioCriacao);
-                SELECT SCOPE_IDENTITY() AS ID;
-            `);
+        const [result] = await pool.query(
+            `INSERT INTO CHAMADO 
+            (TITULO, DESCRICAO, TELEFONE, URGENCIA, IMAGEM, STATUS, DATACRIACAO, USUARIOCRIACAO) 
+            VALUES (?, ?, ?, ?, ?, 1, NOW(), ?)`,
+            [titulo, descricao, telefone, parseInt(urgencia), imagemPath, usuarioCriacao]
+        );
 
         res.status(201).json({ 
             success: true, 
             message: 'Chamado criado com sucesso',
-            chamadoId: result.recordset[0].ID,
+            chamadoId: result.insertId,
             imagemUrl: imagemPath ? `http://${HOST}:${PORT}/${imagemPath}` : null
         });
 
@@ -476,44 +446,41 @@ app.post('/api/chamados', checkSession, upload.single('imagem'), async (req, res
 // Rota para listar chamados
 app.get('/api/chamados', checkSession, async (req, res) => {
     try {
-        const pool = await getPool();
         const codUsuario = req.session.codUsuario;
         
-        const result = await pool.request()
-            .input('codUsuario', sql.BigInt, codUsuario)
-            .query(`
-                SELECT 
-                    c.ID,
-                    c.TITULO,
-                    c.DESCRICAO,
-                    c.TELEFONE,
-                    c.URGENCIA,
-                    tu.DESCRICAO AS DESC_URGENCIA,
-                    CASE 
-                        WHEN c.IMAGEM IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', c.IMAGEM)
-                        ELSE NULL
-                    END AS IMAGEM_URL,
-                    c.STATUS,
-                    ts.DESCRICAO AS DESC_STATUS,
-                    FORMAT(c.DATACRIACAO, 'dd/MM/yyyy HH:mm') AS DATACRIACAO,
-                    FORMAT(c.DATACONCLUSAO, 'dd/MM/yyyy HH:mm') AS DATACONCLUSAO,
-                    c.USUARIOCRIACAO,
-                    uc.USUARIO AS NOME_CRIADOR,
-                    c.USUARIORESOLUCAO,
-                    ur.USUARIO AS NOME_RESOLVEDOR,
-                    c.RESOLUCAO
-                FROM CHAMADO c
-                LEFT JOIN TIPO_URGENCIA tu ON c.URGENCIA = tu.ID
-                LEFT JOIN TIPO_STATUS ts ON c.STATUS = ts.ID
-                LEFT JOIN USUARIOS uc ON c.USUARIOCRIACAO = uc.CODUSUARIO
-                LEFT JOIN USUARIOS ur ON c.USUARIORESOLUCAO = ur.CODUSUARIO
-                WHERE c.USUARIOCRIACAO = @codUsuario
-                ORDER BY c.DATACRIACAO DESC
-            `);
+        const [rows] = await pool.query(`
+            SELECT 
+                c.ID,
+                c.TITULO,
+                c.DESCRICAO,
+                c.TELEFONE,
+                c.URGENCIA,
+                tu.DESCRICAO AS DESC_URGENCIA,
+                CASE 
+                    WHEN c.IMAGEM IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', c.IMAGEM)
+                    ELSE NULL
+                END AS IMAGEM_URL,
+                c.STATUS,
+                ts.DESCRICAO AS DESC_STATUS,
+                DATE_FORMAT(c.DATACRIACAO, '%d/%m/%Y %H:%i') AS DATACRIACAO,
+                DATE_FORMAT(c.DATACONCLUSAO, '%d/%m/%Y %H:%i') AS DATACONCLUSAO,
+                c.USUARIOCRIACAO,
+                uc.USUARIO AS NOME_CRIADOR,
+                c.USUARIORESOLUCAO,
+                ur.USUARIO AS NOME_RESOLVEDOR,
+                c.RESOLUCAO
+            FROM CHAMADO c
+            LEFT JOIN TIPO_URGENCIA tu ON c.URGENCIA = tu.ID
+            LEFT JOIN TIPO_STATUS ts ON c.STATUS = ts.ID
+            LEFT JOIN USUARIOS uc ON c.USUARIOCRIACAO = uc.CODUSUARIO
+            LEFT JOIN USUARIOS ur ON c.USUARIORESOLUCAO = ur.CODUSUARIO
+            WHERE c.USUARIOCRIACAO = ?
+            ORDER BY c.DATACRIACAO DESC
+        `, [codUsuario]);
 
         res.json({ 
             success: true, 
-            chamados: result.recordset 
+            chamados: rows 
         });
     } catch (err) {
         console.error("Erro ao buscar chamados:", err);
@@ -528,11 +495,10 @@ app.get('/api/chamados', checkSession, async (req, res) => {
 // Rota para obter tipos de urgência
 app.get('/api/tipos/urgencia', async (req, res) => {
     try {
-        const pool = await getPool();
-        const result = await pool.request().query("SELECT * FROM TIPO_URGENCIA");
+        const [rows] = await pool.query("SELECT * FROM TIPO_URGENCIA");
         res.json({ 
             success: true, 
-            tipos: result.recordset 
+            tipos: rows 
         });
     } catch (err) {
         res.status(500).json({ 
@@ -546,12 +512,10 @@ app.get('/api/tipos/urgencia', async (req, res) => {
 // Rota para obter tipos de status
 app.get('/api/tipos/status', async (req, res) => {
     try {
-        const pool = await getPool();
-        const result = await pool.request().query("SELECT * FROM TIPO_STATUS");
-        console.log("Tipos de status:", result.recordset); // Adicione este log
+        const [rows] = await pool.query("SELECT * FROM TIPO_STATUS");
         res.json({ 
             success: true, 
-            tipos: result.recordset 
+            tipos: rows 
         });
     } catch (err) {
         res.status(500).json({ 
@@ -565,29 +529,26 @@ app.get('/api/tipos/status', async (req, res) => {
 // Rota para obter dados do usuário
 app.get('/api/usuario/dados', checkSession, async (req, res) => {
     try {
-        const pool = await getPool();
         const codUsuario = req.session.codUsuario;
         
-        const result = await pool.request()
-            .input('codUsuario', sql.Int, codUsuario)
-            .query(`
-                SELECT 
-                    USUARIO, 
-                    NOME, 
-                    DEPARTAMENTO, 
-                    TELEFONE, 
-                    EMAIL,
-                    CPF,
-                    FOTO,
-                    CASE 
-                        WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\', '/'))
-                        ELSE NULL
-                    END AS FOTO_URL
-                FROM USUARIOS 
-                WHERE CODUSUARIO = @codUsuario
-            `);
+        const [rows] = await pool.query(`
+            SELECT 
+                USUARIO, 
+                NOME, 
+                DEPARTAMENTO, 
+                TELEFONE, 
+                EMAIL,
+                CPF,
+                FOTO,
+                CASE 
+                    WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\\\', '/'))
+                    ELSE NULL
+                END AS FOTO_URL
+            FROM USUARIOS 
+            WHERE CODUSUARIO = ?
+        `, [codUsuario]);
 
-        if (result.recordset.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ 
                 success: false, 
                 message: "Usuário não encontrado" 
@@ -596,7 +557,7 @@ app.get('/api/usuario/dados', checkSession, async (req, res) => {
 
         res.json({ 
             success: true, 
-            usuario: result.recordset[0] 
+            usuario: rows[0] 
         });
     } catch (err) {
         console.error("Erro ao buscar dados do usuário:", err);
@@ -611,21 +572,16 @@ app.get('/api/usuario/dados', checkSession, async (req, res) => {
 // Rota para atualizar dados do usuário
 app.put('/api/usuario/dados', checkSession, async (req, res) => {
     try {
-        const { telefone, cpf, email } = req.body; // Adicione email aqui
+        const { telefone, cpf, email } = req.body;
 
-        const pool = await getPool();
-        await pool.request()
-            .input('codUsuario', sql.Int, req.session.codUsuario)
-            .input('telefone', sql.VarChar, telefone)
-            .input('cpf', sql.VarChar, cpf)
-            .input('email', sql.VarChar, email) // Adicione esta linha
-            .query(`
-                UPDATE USUARIOS 
-                SET TELEFONE = @telefone, 
-                    CPF = @cpf,
-                    EMAIL = @email
-                WHERE CODUSUARIO = @codUsuario
-            `);
+        await pool.query(
+            `UPDATE USUARIOS 
+            SET TELEFONE = ?, 
+                CPF = ?,
+                EMAIL = ?
+            WHERE CODUSUARIO = ?`,
+            [telefone, cpf, email, req.session.codUsuario]
+        );
 
         res.json({ 
             success: true, 
@@ -641,29 +597,18 @@ app.put('/api/usuario/dados', checkSession, async (req, res) => {
     }
 });
 
-app.get('/chamados', checkSession, (req, res) => {
-    const filePath = path.join(__dirname, '..', 'frontend', 'chamados', 'chamados.html');
-    fs.access(filePath, fs.constants.F_OK, (err) => {
-        if (err) {
-            console.error('Arquivo não encontrado:', filePath);
-            return res.status(404).send('Página não encontrada');
-        }
-        res.sendFile(filePath);
-    });
-});
-
+// Rota de login administrativo
 app.post('/api/admin/login', async (req, res) => {
     const { usuario, senha } = req.body;
 
     try {
-        const pool = await getPool();
-        const result = await pool.request()
-            .input('usuario', sql.VarChar, usuario)
-            .input('senha', sql.VarChar, senha)
-            .query("SELECT CODUSUARIO, ADMINISTRADOR FROM USUARIOS WHERE usuario = @usuario AND senha = @senha");
+        const [rows] = await pool.query(
+            "SELECT CODUSUARIO, ADMINISTRADOR FROM USUARIOS WHERE usuario = ? AND senha = ?", 
+            [usuario, senha]
+        );
 
-        if (result.recordset.length > 0 && result.recordset[0].ADMINISTRADOR === 1) {
-            req.session.codUsuario = result.recordset[0].CODUSUARIO;
+        if (rows.length > 0 && rows[0].ADMINISTRADOR === 1) {
+            req.session.codUsuario = rows[0].CODUSUARIO;
             req.session.admin = true;
             
             res.json({ 
@@ -705,10 +650,10 @@ app.post('/api/admin/logout', (req, res) => {
     });
 });
 
+// Rota para listar chamados (admin)
 app.get('/api/admin/chamados', checkAdminSession, async (req, res) => {
     try {
         const { status, urgencia, data, search } = req.query;
-        const pool = await getPool();
         
         let query = `
             SELECT 
@@ -724,8 +669,8 @@ app.get('/api/admin/chamados', checkAdminSession, async (req, res) => {
                 END AS IMAGEM_URL,
                 c.STATUS,
                 ts.DESCRICAO AS DESC_STATUS,
-                FORMAT(c.DATACRIACAO, 'dd/MM/yyyy HH:mm') AS DATACRIACAO,
-                FORMAT(c.DATACONCLUSAO, 'dd/MM/yyyy HH:mm') AS DATACONCLUSAO,
+                DATE_FORMAT(c.DATACRIACAO, '%d/%m/%Y %H:%i') AS DATACRIACAO,
+                DATE_FORMAT(c.DATACONCLUSAO, '%d/%m/%Y %H:%i') AS DATACONCLUSAO,
                 c.USUARIOCRIACAO,
                 uc.USUARIO AS NOME_CRIADOR,
                 c.USUARIORESOLUCAO,
@@ -739,26 +684,26 @@ app.get('/api/admin/chamados', checkAdminSession, async (req, res) => {
         `;
         
         const conditions = [];
-        const inputs = {};
+        const params = [];
         
         if (status) {
-            conditions.push('c.STATUS = @status');
-            inputs.status = parseInt(status);
+            conditions.push('c.STATUS = ?');
+            params.push(parseInt(status));
         }
         
         if (urgencia) {
-            conditions.push('c.URGENCIA = @urgencia');
-            inputs.urgencia = parseInt(urgencia);
+            conditions.push('c.URGENCIA = ?');
+            params.push(parseInt(urgencia));
         }
         
         if (data) {
-            conditions.push('CONVERT(DATE, c.DATACRIACAO) = CONVERT(DATE, @data)');
-            inputs.data = data;
+            conditions.push('DATE(c.DATACRIACAO) = DATE(?)');
+            params.push(data);
         }
         
         if (search) {
-            conditions.push('(c.TITULO LIKE @search OR c.DESCRICAO LIKE @search OR uc.USUARIO LIKE @search)');
-            inputs.search = `%${search}%`;
+            conditions.push('(c.TITULO LIKE ? OR c.DESCRICAO LIKE ? OR uc.USUARIO LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
         
         if (conditions.length > 0) {
@@ -767,16 +712,11 @@ app.get('/api/admin/chamados', checkAdminSession, async (req, res) => {
         
         query += ' ORDER BY c.DATACRIACAO DESC';
         
-        const request = pool.request();
-        for (const [key, value] of Object.entries(inputs)) {
-            request.input(key, value);
-        }
-        
-        const result = await request.query(query);
+        const [rows] = await pool.query(query, params);
         
         res.json({ 
             success: true, 
-            chamados: result.recordset 
+            chamados: rows 
         });
     } catch (err) {
         console.error("Erro ao buscar chamados admin:", err);
@@ -788,37 +728,31 @@ app.get('/api/admin/chamados', checkAdminSession, async (req, res) => {
     }
 });
 
+// Rota para atualizar chamados (admin)
 app.put('/api/admin/chamados/:id', checkAdminSession, async (req, res) => {
     try {
         const { status, resolucao } = req.body;
         const chamadoId = req.params.id;
         const usuarioResolucao = req.session.codUsuario;
         
-        const pool = await getPool();
-        
         let query = `
             UPDATE CHAMADO 
-            SET STATUS = @status,
-                USUARIORESOLUCAO = @usuarioResolucao,
-                DATACONCLUSAO = ${status === '3' ? 'GETDATE()' : 'NULL'}
+            SET STATUS = ?,
+                USUARIORESOLUCAO = ?,
+                DATACONCLUSAO = ${status === '3' ? 'NOW()' : 'NULL'}
         `;
         
+        const params = [parseInt(status), usuarioResolucao];
+        
         if (resolucao) {
-            query += `, RESOLUCAO = @resolucao`;
+            query += `, RESOLUCAO = ?`;
+            params.push(resolucao);
         }
         
-        query += ` WHERE ID = @chamadoId`;
+        query += ` WHERE ID = ?`;
+        params.push(parseInt(chamadoId));
         
-        const request = pool.request()
-            .input('status', sql.Int, parseInt(status))
-            .input('usuarioResolucao', sql.BigInt, usuarioResolucao)
-            .input('chamadoId', sql.Int, parseInt(chamadoId));
-            
-        if (resolucao) {
-            request.input('resolucao', sql.Text, resolucao);
-        }
-        
-        await request.query(query);
+        await pool.query(query, params);
         
         res.json({ 
             success: true, 
@@ -834,54 +768,15 @@ app.put('/api/admin/chamados/:id', checkAdminSession, async (req, res) => {
     }
 });
 
-async function checkAdminSession(req, res, next) {
-    if (!req.session.codUsuario) {
-        if (req.accepts('html')) {
-            return res.redirect('/admin/admin-login.html');
-        }
-        return res.status(401).json({
-            success: false, 
-            message: "Não autenticado" 
-        });
-    }
-    
-    try {
-        const pool = await getPool();
-        const result = await pool.request()
-            .input('codUsuario', sql.Int, req.session.codUsuario)
-            .query("SELECT ADMINISTRADOR FROM USUARIOS WHERE CODUSUARIO = @codUsuario");
-
-        if (result.recordset.length > 0 && result.recordset[0].ADMINISTRADOR === 1) {
-            return next();
-        } else {
-            if (req.accepts('html')) {
-                return res.redirect('/admin/admin-login.html');
-            }
-            return res.status(403).json({
-                success: false, 
-                message: "Acesso não autorizado" 
-            });
-        }
-    } catch (err) {
-        console.error("Erro ao verificar permissões de admin:", err);
-        if (req.accepts('html')) {
-            return res.redirect('/admin/admin-login.html');
-        }
-        return res.status(500).json({
-            success: false, 
-            message: "Erro ao verificar permissões" 
-        });
-    }
-}
-
+// Rota para verificar permissões
 app.get('/api/admin/check-permissions', checkSession, async (req, res) => {
     try {
-        const pool = await getPool();
-        const result = await pool.request()
-            .input('codUsuario', sql.Int, req.session.codUsuario)
-            .query("SELECT ADMINISTRADOR FROM USUARIOS WHERE CODUSUARIO = @codUsuario");
+        const [rows] = await pool.query(
+            "SELECT ADMINISTRADOR FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [req.session.codUsuario]
+        );
 
-        if (result.recordset.length > 0 && result.recordset[0].ADMINISTRADOR === 1) {
+        if (rows.length > 0 && rows[0].ADMINISTRADOR === 1) {
             res.json({ isAdmin: true });
         } else {
             res.json({ isAdmin: false });
@@ -896,24 +791,22 @@ app.get('/api/admin/check-permissions', checkSession, async (req, res) => {
     }
 });
 
+// Rota para obter informações do admin
 app.get('/api/admin/user-info', checkAdminSession, async (req, res) => {
     try {
-        const pool = await getPool();
-        const result = await pool.request()
-            .input('codUsuario', sql.Int, req.session.codUsuario)
-            .query(`
-                SELECT 
-                    NOME,
-                    FOTO,
-                    CASE 
-                        WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\', '/'))
-                        ELSE NULL
-                    END AS FOTO_URL
-                FROM USUARIOS 
-                WHERE CODUSUARIO = @codUsuario
-            `);
+        const [rows] = await pool.query(`
+            SELECT 
+                NOME,
+                FOTO,
+                CASE 
+                    WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\\\', '/'))
+                    ELSE NULL
+                END AS FOTO_URL
+            FROM USUARIOS 
+            WHERE CODUSUARIO = ?
+        `, [req.session.codUsuario]);
 
-        if (result.recordset.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ 
                 success: false, 
                 message: "Administrador não encontrado" 
@@ -922,7 +815,7 @@ app.get('/api/admin/user-info', checkAdminSession, async (req, res) => {
 
         res.json({ 
             success: true,
-            usuario: result.recordset[0]
+            usuario: rows[0]
         });
     } catch (err) {
         console.error("Erro ao buscar dados do admin:", err);
@@ -934,6 +827,7 @@ app.get('/api/admin/user-info', checkAdminSession, async (req, res) => {
     }
 });
 
+// Rota para upload de foto
 app.post('/api/upload-photo', checkSession, upload.single('foto'), async (req, res) => {
     try {
         if (!req.file) {
@@ -943,14 +837,12 @@ app.post('/api/upload-photo', checkSession, upload.single('foto'), async (req, r
             });
         }
 
-        const pool = await getPool();
-        // Garante que o caminho está no formato correto para o banco de dados
-        const fotoPath = `uploads\\${req.file.filename}`;
+        const fotoPath = `uploads/${req.file.filename}`;
         
-        await pool.request()
-            .input('codUsuario', sql.Int, req.session.codUsuario)
-            .input('foto', sql.VarChar, fotoPath)
-            .query("UPDATE USUARIOS SET FOTO = @foto WHERE CODUSUARIO = @codUsuario");
+        await pool.query(
+            "UPDATE USUARIOS SET FOTO = ? WHERE CODUSUARIO = ?",
+            [fotoPath, req.session.codUsuario]
+        );
 
         res.json({ 
             success: true,
@@ -976,7 +868,6 @@ app.post('/api/upload-photo', checkSession, upload.single('foto'), async (req, r
 app.get('/api/admin/users', checkAdminSession, async (req, res) => {
     try {
         const { type, status, search } = req.query;
-        const pool = await getPool();
         
         let query = `
             SELECT 
@@ -995,31 +886,31 @@ app.get('/api/admin/users', checkAdminSession, async (req, res) => {
                     WHEN STATUS = 0 THEN 'Ativo'
                     ELSE 'Inativo'
                 END AS DESC_STATUS,
-                FORMAT(DATA_CRIACAO, 'dd/MM/yyyy HH:mm') AS DATA_CRIACAO,
+                DATE_FORMAT(DATA_CRIACAO, '%d/%m/%Y %H:%i') AS DATA_CRIACAO,
                 FOTO,
                 CASE 
-                    WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\', '/'))
+                    WHEN FOTO IS NOT NULL THEN CONCAT('http://${HOST}:${PORT}/', REPLACE(FOTO, '\\\\', '/'))
                     ELSE NULL
                 END AS FOTO_URL
             FROM USUARIOS
         `;
         
         const conditions = [];
-        const inputs = {};
+        const params = [];
         
         if (type) {
-            conditions.push('ADMINISTRADOR = @type');
-            inputs.type = parseInt(type);
+            conditions.push('ADMINISTRADOR = ?');
+            params.push(parseInt(type));
         }
         
         if (status) {
-            conditions.push('STATUS = @status');  // Alterado para STATUS
-            inputs.status = parseInt(status);
+            conditions.push('STATUS = ?');
+            params.push(parseInt(status));
         }
         
         if (search) {
-            conditions.push('(USUARIO LIKE @search OR NOME LIKE @search OR EMAIL LIKE @search)');
-            inputs.search = `%${search}%`;
+            conditions.push('(USUARIO LIKE ? OR NOME LIKE ? OR EMAIL LIKE ?)');
+            params.push(`%${search}%`, `%${search}%`, `%${search}%`);
         }
         
         if (conditions.length > 0) {
@@ -1028,16 +919,11 @@ app.get('/api/admin/users', checkAdminSession, async (req, res) => {
         
         query += ' ORDER BY NOME';
         
-        const request = pool.request();
-        for (const [key, value] of Object.entries(inputs)) {
-            request.input(key, value);
-        }
-        
-        const result = await request.query(query);
+        const [rows] = await pool.query(query, params);
         
         res.json({ 
             success: true, 
-            users: result.recordset 
+            users: rows 
         });
     } catch (err) {
         console.error("Erro ao buscar usuários:", err);
@@ -1062,15 +948,14 @@ app.post('/api/admin/users', checkAdminSession, upload.single('photo'), async (r
                 message: "Nome, e-mail e tipo são obrigatórios" 
             });
         }
-
-        const pool = await getPool();
         
         // Verifica se o e-mail já existe
-        const emailCheck = await pool.request()
-            .input('email', sql.VarChar, email)
-            .query("SELECT CODUSUARIO FROM USUARIOS WHERE EMAIL = @email");
+        const [emailCheck] = await pool.query(
+            "SELECT CODUSUARIO FROM USUARIOS WHERE EMAIL = ?", 
+            [email]
+        );
         
-        if (emailCheck.recordset.length > 0) {
+        if (emailCheck.length > 0) {
             if (photoFile) fs.unlink(photoFile.path, () => {});
             return res.status(400).json({ 
                 success: false, 
@@ -1078,30 +963,21 @@ app.post('/api/admin/users', checkAdminSession, upload.single('photo'), async (r
             });
         }
 
-        const photoPath = photoFile ? `uploads\\${photoFile.filename}` : null;
-
+        const photoPath = photoFile ? `uploads/${photoFile.filename}` : null;
         const status = req.body.status || 0;
         
-        const result = await pool.request()
-            .input('usuario', sql.VarChar, email.split('@')[0])
-            .input('nome', sql.VarChar, name)
-            .input('email', sql.VarChar, email)
-            .input('senha', sql.VarChar, password)
-            .input('tipo', sql.Int, parseInt(type))
-            .input('status', sql.Bit, parseInt(status) || 0)  // Corrigido aqui (estava usando type)
-            .input('foto', sql.VarChar, photoPath)
-            .query(`
-                INSERT INTO USUARIOS 
-                (USUARIO, NOME, EMAIL, SENHA, ADMINISTRADOR, STATUS, FOTO, DATA_CRIACAO) 
-                VALUES (@usuario, @nome, @email, @senha, @tipo, @status, @foto, GETDATE());
-                SELECT SCOPE_IDENTITY() AS ID;
-            `);
+        const [result] = await pool.query(
+            `INSERT INTO USUARIOS 
+            (USUARIO, NOME, EMAIL, SENHA, ADMINISTRADOR, STATUS, FOTO, DATA_CRIACAO) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+            [email.split('@')[0], name, email, password, parseInt(type), parseInt(status) || 0, photoPath]
+        );
 
         res.status(201).json({ 
             success: true, 
             message: 'Usuário criado com sucesso',
-            userId: result.recordset[0].ID,
-            photoUrl: photoPath ? `http://${HOST}:${PORT}/${photoPath.replace(/\\/g, '/')}` : null
+            userId: result.insertId,
+            photoUrl: photoPath ? `http://${HOST}:${PORT}/${photoPath}` : null
         });
 
     } catch (err) {
@@ -1130,14 +1006,13 @@ app.put('/api/admin/users/:id', checkAdminSession, upload.single('photo'), async
             });
         }
 
-        const pool = await getPool();
-        
         // Verifica se o usuário existe
-        const userCheck = await pool.request()
-            .input('id', sql.Int, userId)
-            .query("SELECT CODUSUARIO, EMAIL FROM USUARIOS WHERE CODUSUARIO = @id");
+        const [userCheck] = await pool.query(
+            "SELECT CODUSUARIO, EMAIL, FOTO FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [userId]
+        );
         
-        if (userCheck.recordset.length === 0) {
+        if (userCheck.length === 0) {
             if (photoFile) fs.unlink(photoFile.path, () => {});
             return res.status(404).json({ 
                 success: false, 
@@ -1146,12 +1021,13 @@ app.put('/api/admin/users/:id', checkAdminSession, upload.single('photo'), async
         }
 
         // Verifica se o e-mail já existe para outro usuário
-        if (userCheck.recordset[0].EMAIL !== email) {
-            const emailCheck = await pool.request()
-                .input('email', sql.VarChar, email)
-                .query("SELECT CODUSUARIO FROM USUARIOS WHERE EMAIL = @email");
+        if (userCheck[0].EMAIL !== email) {
+            const [emailCheck] = await pool.query(
+                "SELECT CODUSUARIO FROM USUARIOS WHERE EMAIL = ?", 
+                [email]
+            );
             
-            if (emailCheck.recordset.length > 0) {
+            if (emailCheck.length > 0) {
                 if (photoFile) fs.unlink(photoFile.path, () => {});
                 return res.status(400).json({ 
                     success: false, 
@@ -1162,54 +1038,43 @@ app.put('/api/admin/users/:id', checkAdminSession, upload.single('photo'), async
 
         // Obter foto atual para deletar se for substituída
         let oldPhotoPath = null;
-        if (photoFile) {
-            const currentPhoto = await pool.request()
-                .input('id', sql.Int, userId)
-                .query("SELECT FOTO FROM USUARIOS WHERE CODUSUARIO = @id");
-            
-            if (currentPhoto.recordset[0].FOTO) {
-                oldPhotoPath = path.join(__dirname, '..', currentPhoto.recordset[0].FOTO);
-            }
+        if (photoFile && userCheck[0].FOTO) {
+            oldPhotoPath = path.join(__dirname, '..', userCheck[0].FOTO);
         }
 
-        const photoPath = photoFile ? `uploads\\${photoFile.filename}` : null;
+        const photoPath = photoFile ? `uploads/${photoFile.filename}` : null;
         
         let query = `
             UPDATE USUARIOS SET
-                USUARIO = @usuario,
-                NOME = @nome,
-                EMAIL = @email,
-                ADMINISTRADOR = @tipo,
-                STATUS = @status
+                USUARIO = ?,
+                NOME = ?,
+                EMAIL = ?,
+                ADMINISTRADOR = ?,
+                STATUS = ?
         `;
         
+        const params = [
+            email.split('@')[0], 
+            name, 
+            email, 
+            parseInt(type), 
+            parseInt(status) || 1
+        ];
+        
         if (password) {
-            query += `, SENHA = @senha`;
+            query += `, SENHA = ?`;
+            params.push(password);
         }
         
         if (photoPath) {
-            query += `, FOTO = @foto`;
+            query += `, FOTO = ?`;
+            params.push(photoPath);
         }
         
-        query += ` WHERE CODUSUARIO = @id`;
+        query += ` WHERE CODUSUARIO = ?`;
+        params.push(userId);
         
-        const request = pool.request()
-            .input('id', sql.Int, userId)
-            .input('usuario', sql.VarChar, email.split('@')[0])
-            .input('nome', sql.VarChar, name)
-            .input('email', sql.VarChar, email)
-            .input('tipo', sql.Int, parseInt(type))
-            .input('status', sql.Bit, parseInt(status) || 1);
-        
-        if (password) {
-            request.input('senha', sql.VarChar, password);
-        }
-        
-        if (photoPath) {
-            request.input('foto', sql.VarChar, photoPath);
-        }
-        
-        await request.query(query);
+        await pool.query(query, params);
         
         // Remove a foto antiga se foi substituída
         if (oldPhotoPath) {
@@ -1221,7 +1086,7 @@ app.put('/api/admin/users/:id', checkAdminSession, upload.single('photo'), async
         res.json({ 
             success: true, 
             message: 'Usuário atualizado com sucesso',
-            photoUrl: photoPath ? `http://${HOST}:${PORT}/${photoPath.replace(/\\/g, '/')}` : null
+            photoUrl: photoPath ? `http://${HOST}:${PORT}/${photoPath}` : null
         });
 
     } catch (err) {
@@ -1238,14 +1103,14 @@ app.put('/api/admin/users/:id', checkAdminSession, upload.single('photo'), async
 app.delete('/api/admin/users/:id', checkAdminSession, async (req, res) => {
     try {
         const userId = req.params.id;
-        const pool = await getPool();
         
         // Verifica se o usuário existe
-        const userCheck = await pool.request()
-            .input('id', sql.Int, userId)
-            .query("SELECT FOTO FROM USUARIOS WHERE CODUSUARIO = @id");
+        const [userCheck] = await pool.query(
+            "SELECT FOTO FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [userId]
+        );
         
-        if (userCheck.recordset.length === 0) {
+        if (userCheck.length === 0) {
             return res.status(404).json({ 
                 success: false, 
                 message: "Usuário não encontrado" 
@@ -1254,29 +1119,29 @@ app.delete('/api/admin/users/:id', checkAdminSession, async (req, res) => {
 
         // Obter foto para deletar
         let photoPath = null;
-        if (userCheck.recordset[0].FOTO) {
-            photoPath = path.join(__dirname, '..', userCheck.recordset[0].FOTO);
+        if (userCheck[0].FOTO) {
+            photoPath = path.join(__dirname, '..', userCheck[0].FOTO);
         }
 
         // Verificar se o usuário tem chamados associados
-        const chamadosCheck = await pool.request()
-        .input('id', sql.Int, userId)
-        .query(`
-            SELECT COUNT(*) AS total 
+        const [chamadosCheck] = await pool.query(
+            `SELECT COUNT(*) AS total 
             FROM CHAMADO 
-            WHERE USUARIOCRIACAO = @id OR USUARIORESOLUCAO = @id
-        `);
+            WHERE USUARIOCRIACAO = ? OR USUARIORESOLUCAO = ?`,
+            [userId, userId]
+        );
         
-        if (chamadosCheck.recordset[0].total > 0) {
+        if (chamadosCheck[0].total > 0) {
             return res.status(400).json({ 
                 success: false, 
                 message: "Não é possível excluir usuário com chamados associados" 
             });
         }
 
-        await pool.request()
-            .input('id', sql.Int, userId)
-            .query("DELETE FROM USUARIOS WHERE CODUSUARIO = @id");
+        await pool.query(
+            "DELETE FROM USUARIOS WHERE CODUSUARIO = ?", 
+            [userId]
+        );
         
         // Remove a foto se existir
         if (photoPath) {
@@ -1311,6 +1176,7 @@ function generateRandomPassword() {
     return password;
 }
 
+// Middleware de erro
 app.use((err, req, res, next) => {
     console.error(err.stack);
     res.status(500).json({
@@ -1323,4 +1189,4 @@ app.use((err, req, res, next) => {
 // Iniciar servidor
 app.listen(PORT, () => {
     console.log(`Servidor rodando na porta ${PORT}`);
-  });
+});
