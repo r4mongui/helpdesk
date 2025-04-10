@@ -201,50 +201,51 @@ app.post('/api/login', async (req, res) => {
     const { usuario, senha } = req.body;
 
     if (!usuario || !senha) {
-        return res.status(400).json({ 
-            success: false, 
-            message: "Usuário e senha são obrigatórios" 
+        return res.status(400).json({
+          success: false,
+          message: "Usuário e senha são obrigatórios"
         });
-    }
+      }
 
-    try {
+      try {
         const [rows] = await pool.query(
-            "SELECT CODUSUARIO FROM USUARIOS WHERE usuario = ? AND senha = ?", 
-            [usuario, senha]
+          "SELECT CODUSUARIO FROM USUARIOS WHERE usuario = ? AND senha = ?",
+          [usuario, senha]
         );
 
         if (rows.length > 0) {
-            req.session.codUsuario = rows[0].CODUSUARIO;
+        req.session.codUsuario = rows[0].CODUSUARIO;
 
-            req.session.save(err => {
+        req.session.save(err => {
             if (err) {
-                console.error("Erro ao salvar sessão:", err);
-                return res.status(500).json({
+              console.error("Erro ao salvar sessão:", err);
+              return res.status(500).json({
                 success: false,
                 message: "Erro interno ao salvar a sessão"
-                });
+              });
             }
+            console.log('Sessão salva corretamente com codUsuario:', req.session);
 
             res.json({
                 success: true,
                 message: "Login bem-sucedido"
-            });
+              });
             });
         } else {
-            res.status(401).json({ 
-                success: false, 
-                message: "Usuário ou senha incorretos" 
+            res.status(401).json({
+              success: false,
+              message: "Usuário ou senha incorretos"
             });
-        }
-    } catch (err) {
-        console.error("Erro no login:", err);
-        res.status(500).json({ 
-            success: false, 
-            message: "Erro interno do servidor",
-            error: err.message 
+          }
+        } catch (err) {
+            console.error("Erro no login:", err);
+            res.status(500).json({
+              success: false,
+              message: "Erro interno do servidor",
+              error: err.message
+            });
+          }
         });
-    }
-});
 
 app.get('/api/usuarios', checkSession, async (req, res) => {
     try {
