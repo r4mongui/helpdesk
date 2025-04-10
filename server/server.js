@@ -61,16 +61,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
 const corsOptions = {
-    origin: 'https://app.grupoconcresul.com.br',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: [
-      'Content-Type',
-      'Authorization',
-      'X-Requested-With',
-      'Cookie' // ⬅️ adiciona isso!
-    ],
-    exposedHeaders: ['Set-Cookie'], // ⬅️ permite que o navegador veja o Set-Cookie
+    origin: 'https://app.grupoconcresul.com.br', // ✅ sem colchetes
+    credentials: true,                           // ✅ permite enviar e receber cookies
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Cookie'],
+    exposedHeaders: ['Set-Cookie'],
     optionsSuccessStatus: 200
   };
 
@@ -92,12 +87,11 @@ const sessionStore = new KnexSessionStore({
     resave: false,
     saveUninitialized: false,
     cookie: {
-      domain: '.grupoconcresul.com.br', // ⬅️ adiciona isso!
-      secure: true,
-      httpOnly: true,
-      sameSite: 'none',
-      maxAge: 24 * 60 * 60 * 1000
-    }
+        secure: true,
+        httpOnly: true,
+        sameSite: 'none',
+        maxAge: 24 * 60 * 60 * 1000
+      }
   }));
 
 // 4. Middleware para servir arquivos estáticos
