@@ -178,11 +178,11 @@ app.get('/api/check-image/:filename', async (req, res) => {
 function checkSession(req, res, next) {
     if (!req.session.codUsuario) {
         if (req.accepts('html')) {
-            return res.redirect('/login');
+            return res.redirect('/'); // Agora redireciona para a raiz (index.html)
         }
         return res.status(401).json({
             success: false, 
-            message: "Não autenticado" 
+            message: "Não autenticado"
         });
     }
     next();
@@ -192,7 +192,7 @@ function checkSession(req, res, next) {
 async function checkAdminSession(req, res, next) {
     if (!req.session.codUsuario) {
         if (req.accepts('html')) {
-            return res.redirect('/admin/admin-login.html');
+            return res.redirect('admin-login.html');
         }
         return res.status(401).json({
             success: false, 
@@ -210,7 +210,7 @@ async function checkAdminSession(req, res, next) {
             return next();
         } else {
             if (req.accepts('html')) {
-                return res.redirect('/admin/admin-login.html');
+                return res.redirect('admin-login.html');
             }
             return res.status(403).json({
                 success: false, 
@@ -220,7 +220,7 @@ async function checkAdminSession(req, res, next) {
     } catch (err) {
         console.error("Erro ao verificar permissões de admin:", err);
         if (req.accepts('html')) {
-            return res.redirect('/admin/admin-login.html');
+            return res.redirect('admin-login.html');
         }
         return res.status(500).json({
             success: false, 
