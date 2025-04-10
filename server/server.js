@@ -257,6 +257,7 @@ app.post('/api/login', async (req, res) => {
                 message: "Login bem-sucedido"
               });
             });
+            console.log('SID ao logar:', req.sessionID);
         } else {
             res.status(401).json({
               success: false,
@@ -295,6 +296,8 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/check-auth', (req, res) => {
+    console.log('SID recebido no check-auth:', req.sessionID);
+    console.log('Sessão:', req.session);
     console.log('Sessão recebida no check-auth:', req.session);
     if (req.session && req.session.codUsuario) {
         return res.json({ authenticated: true });
