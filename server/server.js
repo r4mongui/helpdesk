@@ -8,11 +8,11 @@ const fs = require('fs');
 
 // Configuração do banco de dados MySQL
 const pool = mysql.createPool({
-    host: 'interchange.proxy.rlwy.net',
-    port: 19905,
-    user: 'root',
-    password: 'dvyGvZfypklSjbzhNuqytVtTfERErqyR',
-    database: 'railway',
+    host: 'br910.hostgator.com.br',
+    user: 'concresu_admin_helpdesk',
+    password: 'Cncr@1020',
+    database: 'concresu_helpdesk',
+    port: 3306,
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0
