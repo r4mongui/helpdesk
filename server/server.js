@@ -228,6 +228,7 @@ app.post('/api/login', async (req, res) => {
                     success: true,
                     message: "Login bem-sucedido"
                 });
+                console.log('Sessão salva para o usuário:', req.session);
             });
         } else {
             res.status(401).json({ 
@@ -267,11 +268,11 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/check-auth', (req, res) => {
+    console.log('Sessão recebida no check-auth:', req.session);
     if (req.session && req.session.codUsuario) {
-        res.json({ authenticated: true });
-    } else {
-        res.status(401).json({ authenticated: false });
+        return res.json({ authenticated: true });
     }
+    return res.status(401).json({ authenticated: false });
 });
 
 // Rota para redefinir senha

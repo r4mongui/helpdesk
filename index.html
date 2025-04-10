@@ -40,21 +40,19 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Verifica explicitamente a sessão antes de redirecionar
                     const authCheck = await fetch(`${API_BASE_URL}/api/check-auth`, {
                         credentials: 'include'
                     });
-                    
+
                     const authData = await authCheck.json();
-                    
+                    console.log("Resultado do authCheck:", authData);
+
                     if (authData.authenticated) {
-                        // Força um redirecionamento absoluto
-                        window.location.href = "dashboard.html";
+                        window.location.href = "dashboard/dashboard.html";
                     } else {
+                        console.log('Cookies atuais:', document.cookie);
                         alert("Autenticação falhou após login");
                     }
-                } else {
-                    alert(data.message || "Usuário ou senha incorretos!");
                 }
             } catch (error) {
                 console.error("Erro ao fazer login:", error);
