@@ -83,6 +83,7 @@ const sessionStore = new KnexSessionStore({
     resave: false,
     saveUninitialized: false,
     cookie: {
+      domain: '.grupoconcresul.com.br', // ⬅️ adiciona isso!
       secure: true,
       httpOnly: true,
       sameSite: 'none',
