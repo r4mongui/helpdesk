@@ -5,7 +5,6 @@ const cors = require('cors');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
-require('dotenv').config({ path: 'config.env' });
 
 // Configuração do banco de dados MySQL
 const pool = mysql.createPool({
@@ -98,27 +97,27 @@ const staticOptions = {
 
 // 5. Configurar rotas estáticas
 app.use('/dashboard', express.static(
-    path.join(__dirname, '..', 'frontend', 'dashboard'), 
+    path.join(__dirname, '..', 'dashboard'), 
     staticOptions
 ));
 
 app.use('/chamados', express.static(
-    path.join(__dirname, '..', 'frontend', 'chamados'), 
+    path.join(__dirname, '..', 'chamados'), 
     staticOptions
 ));
 
 app.use('/login', express.static(
-    path.join(__dirname, '..', 'frontend', 'login'), 
+    path.join(__dirname, '..', 'login'), 
     staticOptions
 ));
 
 app.use('/password', express.static(
-    path.join(__dirname, '..', 'frontend', 'password'), 
+    path.join(__dirname, '..', 'password'), 
     staticOptions
 ));
 
 app.use('/images', express.static(
-    path.join(__dirname, '..', 'frontend', 'images'),
+    path.join(__dirname, '..', 'images'),
     { maxAge: '1d' }
 ));
 
@@ -132,23 +131,23 @@ app.use('/uploads', express.static(
 ));
 
 app.use('/admin', express.static(
-    path.join(__dirname, '..', 'frontend', 'admin'),
+    path.join(__dirname, '..', 'admin'),
     staticOptions
 ));
 
 app.use('/perfil', express.static(
-    path.join(__dirname, '..', 'frontend', 'perfil'), 
+    path.join(__dirname, '..', 'perfil'), 
     staticOptions
 ));
 
-app.use('/admin/usuarios', express.static(
-    path.join(__dirname, '..', 'frontend', 'admin', 'usuarios'),
+app.use('/usuarios', express.static(
+    path.join(__dirname, '..', 'usuarios'),
     staticOptions
 ));
 
 // 6. Rotas principais
 app.get('/', (req, res) => {
-    const filePath = path.join(__dirname, '..', 'frontend', 'login', 'login.html');
+    const filePath = path.join(__dirname, '..', 'login.html');
     
     fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {

@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/login/login.css">
-    <link rel="shortcut icon" href="../images/grupoconcresul.ico" type="image/x-icon">
+    <link rel="stylesheet" href="login.css">
+    <link rel="shortcut icon" href="images/grupoconcresul.ico" type="image/x-icon">
     <title>Entrar</title>
 </head>
 <body>
     <div class="login">
-        <img src="/images/logo_grupoconcresul.png" alt="Grupo Concresul - Logo">
+        <img src="images/logo_grupoconcresul.png" alt="Grupo Concresul - Logo">
         <form id="loginForm">
             <input type="text" id="usuario" placeholder="Usuário" required autocomplete="username">
             <input type="password" id="senha" placeholder="Senha" required autocomplete="current-password">
@@ -49,7 +49,7 @@
                     
                     if (authData.authenticated) {
                         // Força um redirecionamento absoluto
-                        window.location.href = "/dashboard/dashboard.html";
+                        window.location.href = "dashboard.html";
                     } else {
                         alert("Autenticação falhou após login");
                     }

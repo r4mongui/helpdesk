@@ -27,7 +27,7 @@ async function initLoginPage() {
             const data = await response.json();
             
             data.success 
-                ? window.location.href = '/admin/admin.html'
+                ? window.location.href = 'admin.html'
                 : errorMessage.textContent = data.message || 'Credenciais inválidas ou sem permissão de administrador';
         } catch (error) {
             console.error('Erro no login:', error);
@@ -67,7 +67,7 @@ async function initAdminPage() {
 }
 
 function redirectToLogin() {
-    window.location.href = '/admin/admin-login.html';
+    window.location.href = 'admin-login.html';
 }
 
 async function loadAdminInfo() {

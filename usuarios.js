@@ -35,7 +35,7 @@ async function initUsersPage() {
 }
 
 function redirectToLogin() {
-    window.location.href = '/admin/admin-login.html';
+    window.location.href = 'admin-login.html';
 }
 
 async function loadAdminInfo() {

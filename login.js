@@ -11,7 +11,7 @@ fetch(`${API_BASE_URL}/login`, {
 .then(data => {
     if (data.success) {
         localStorage.setItem("auth", "true");
-        window.location.href = "/dashboard/dashboard.html";
+        window.location.href = "dashboard.html";
     } else {
         alert("Usuário ou senha incorretos");
     }

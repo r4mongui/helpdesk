@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function() {
             await carregarDadosUsuario();
         } catch (error) {
             console.error('Erro na verificação de autenticação:', error);
-            window.location.href = '/login/login.html';
+            window.location.href = 'login.html';
         }
     }
 
@@ -251,14 +251,14 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             if (response.ok) {
-                window.location.href = '/login/login.html';
+                window.location.href = 'login.html';
             } else {
                 console.warn('Falha ao fazer logout, redirecionando...');
-                window.location.href = '/login/login.html';
+                window.location.href = 'login.html';
             }
         } catch (error) {
             console.error('Erro ao fazer logout:', error);
-            window.location.href = '/login/login.html';
+            window.location.href = 'login.html';
         }
     }
 
