@@ -5,6 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
+const KnexSessionStore = require('connect-session-knex')(session);
 
 // Configuração do banco de dados MySQL
 const pool = mysql.createPool({
@@ -18,7 +19,15 @@ const pool = mysql.createPool({
     queueLimit: 0
   });
 
-  
+  const knex = require('knex')({
+    client: 'mysql2',
+    connection: {
+      host: 'br910.hostgator.com.br',
+      user: 'concresu_admin_helpdesk',
+      password: 'Cncr@1020',
+      database: 'concresu_helpdesk'
+    }
+  });
 
   (async () => {
     try {
@@ -59,35 +68,27 @@ app.use(cors({
   }));
   
 // 3. Configuração de sessão (usando store MySQL)
-const MySQLStore = require('express-mysql-session')(session);
-const sessionStore = new MySQLStore({
-    clearExpired: true,
-    checkExpirationInterval: 900000,
-    expiration: 86400000,
-    createDatabaseTable: true,
-    schema: {
-        tableName: 'sessions',
-        columnNames: {
-            session_id: 'session_id',
-            expires: 'expires',
-            data: 'data'
-        }
-    }
-}, pool);
+const sessionStore = new KnexSessionStore({
+    knex,
+    tablename: 'sessions',
+    createtable: true, // cria automaticamente a tabela de sessões
+    sidfieldname: 'sid',
+    clearInterval: 60000 // limpa sessões expiradas a cada minuto
+  });
 
-app.use(session({
-    name: 'connect.sid', // ✅ Define o nome correto do cookie
+  app.use(session({
+    name: 'connect.sid',
     secret: 'grupo_concresul',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,           // ✅ obrigatório para HTTPS
+      secure: true,
       httpOnly: true,
-      sameSite: 'none',       // ✅ obrigatório para domínios diferentes
+      sameSite: 'none',
       maxAge: 24 * 60 * 60 * 1000
     }
-}));
+  }));
 
 // 4. Middleware para servir arquivos estáticos
 const staticOptions = {
