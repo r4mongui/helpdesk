@@ -103,10 +103,8 @@ const staticOptions = {
     }
   };
 
-app.use(express.static(
-    path.join(__dirname, '..', 'HelpDesk'), 
-    staticOptions
-));
+  const path = require('path');
+  app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // 6. Rotas principais
 app.get('/', (req, res) => {

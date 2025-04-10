@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+const API_BASE_URL = '';
 
 fetch(`${API_BASE_URL}/login`, {
     method: "POST",

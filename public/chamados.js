@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://helpdesk-q2qd.onrender.com';
+const API_BASE_URL = '';
 
 document.addEventListener('DOMContentLoaded', function() {
     // Cache de elementos DOM (mantido igual)
