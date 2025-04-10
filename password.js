@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             alert('Senha redefinida com sucesso!');
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
             
         } catch (error) {
             console.error('Erro na redefinição:', error);

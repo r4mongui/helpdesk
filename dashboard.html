@@ -38,7 +38,7 @@
                     <ul class="submenu" id="submenu-perfil" role="menu">
                         <li role="none"><a href="dados-cadastrais.html" role="menuitem">Meus Dados</a></li>
                         <li role="none"><a href="password.html" role="menuitem">Redefinir Senha</a></li>
-                        <li role="none"><a href="login.html" id="logout-link" role="menuitem">Sair</a></li>
+                        <li role="none"><a href="index.html" id="logout-link" role="menuitem">Sair</a></li>
                     </ul>
                 </li>
             </ul>
@@ -132,7 +132,7 @@
                 }
             } catch (error) {
                 console.error('Erro na verificação de autenticação:', error);
-                window.location.href = 'login.html';
+                window.location.href = 'index.html';
             }
         }
 
@@ -279,14 +279,14 @@
                     });
 
                     if (response.ok) {
-                        window.location.href = 'login.html';
+                        window.location.href = 'index.html';
                     } else {
                         console.warn('Falha ao fazer logout, redirecionando...');
-                        window.location.href = 'login.html';
+                        window.location.href = 'index.html';
                     }
                 } catch (error) {
                     console.error('Erro ao fazer logout:', error);
-                    window.location.href = 'login.html';
+                    window.location.href = 'index.html';
                 }
             });
         });

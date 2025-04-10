@@ -155,7 +155,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch (error) {
             console.error('Falha na verificação de autenticação:', error);
-            window.location.href = 'login.html';
+            window.location.href = 'index.html';
         }
     }
 

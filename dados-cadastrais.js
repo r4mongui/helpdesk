@@ -196,20 +196,20 @@ document.addEventListener('DOMContentLoaded', function() {
     })
     .then(response => {
         if (!response.ok) {
-            window.location.href = 'login.html'; // Caminho corrigido
+            window.location.href = 'index.html'; // Caminho corrigido
         } else {
             return response.json();
         }
     })
     .then(data => {
         if (!data.authenticated) {
-            window.location.href = 'login.html'; // Caminho corrigido
+            window.location.href = 'index.html'; // Caminho corrigido
         } else {
             carregarDadosUsuario();
         }
     })
     .catch(err => {
         console.error('Erro ao verificar autenticação:', err);
-        window.location.href = 'login.html'; // Caminho corrigido
+        window.location.href = 'index.html'; // Caminho corrigido
     });
 });

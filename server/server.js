@@ -76,83 +76,25 @@ app.use(session({
 // 4. Middleware para servir arquivos estáticos
 const staticOptions = {
     setHeaders: (res, filePath) => {
-        const mimeTypes = {
-            '.html': 'text/html; charset=UTF-8',
-            '.css': 'text/css; charset=UTF-8',
-            '.js': 'application/javascript; charset=UTF-8',
-            '.png': 'image/png',
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.gif': 'image/gif',
-            '.ico': 'image/x-icon',
-            '.svg': 'image/svg+xml'
-        };
-        
-        const ext = path.extname(filePath).toLowerCase();
-        if (mimeTypes[ext]) {
-            res.set('Content-Type', mimeTypes[ext]);
-        }
+      if (filePath.endsWith('.js')) {
+        res.setHeader('Content-Type', 'application/javascript; charset=UTF-8');
+      }
     }
-};
+  };
 
-// 5. Configurar rotas estáticas
-app.use('/dashboard', express.static(
-    path.join(__dirname, '..', 'dashboard'), 
-    staticOptions
-));
-
-app.use('/chamados', express.static(
-    path.join(__dirname, '..', 'chamados'), 
-    staticOptions
-));
-
-app.use('/login', express.static(
-    path.join(__dirname, '..', 'login'), 
-    staticOptions
-));
-
-app.use('/password', express.static(
-    path.join(__dirname, '..', 'password'), 
-    staticOptions
-));
-
-app.use('/images', express.static(
-    path.join(__dirname, '..', 'images'),
-    { maxAge: '1d' }
-));
-
-app.use('/uploads', express.static(
-    path.join(__dirname, '..', 'uploads'),
-    {
-        setHeaders: (res, path) => {
-            res.set('Access-Control-Allow-Origin', '*');
-        }
-    }
-));
-
-app.use('/admin', express.static(
-    path.join(__dirname, '..', 'admin'),
-    staticOptions
-));
-
-app.use('/perfil', express.static(
-    path.join(__dirname, '..', 'perfil'), 
-    staticOptions
-));
-
-app.use('/usuarios', express.static(
-    path.join(__dirname, '..', 'usuarios'),
+app.use(express.static(
+    path.join(__dirname, '..', 'HelpDesk'), 
     staticOptions
 ));
 
 // 6. Rotas principais
 app.get('/', (req, res) => {
-    const filePath = path.join(__dirname, '..', 'login.html');
+    const filePath = path.join(__dirname, '..', 'index.html');
     
     fs.access(filePath, fs.constants.F_OK, (err) => {
         if (err) {
             console.error('Arquivo não encontrado:', filePath);
-            return res.status(404).send('Página de login não encontrada');
+            return res.status(404).send('Página inicial não encontrada');
         }
         res.sendFile(filePath, { 
             headers: {
