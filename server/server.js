@@ -50,12 +50,12 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
 app.use(cors({
-    origin: ['https://app.grupoconcresul.com.br'], // ou '*', mas melhor ser específico
-    credentials: true,                             // ✅ permite enviar cookies
+    origin: 'https://app.grupoconcresul.com.br', // ✅ sem colchetes
+    credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+    optionsSuccessStatus: 200 // ✅ evita problemas com navegadores mais antigos
   }));
-
+  
 // 3. Configuração de sessão (usando store MySQL)
 const MySQLStore = require('express-mysql-session')(session);
 const sessionStore = new MySQLStore({}, pool);
