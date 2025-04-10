@@ -5,7 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
-const KnexSessionStore = require('connect-session-knex').default;
+const KnexSessionStore = require('connect-session-knex')(session);
 
 // Configuração do banco de dados MySQL
 const pool = mysql.createPool({
