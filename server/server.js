@@ -5,7 +5,7 @@ const cors = require('cors');
 const multer = require('multer');
 const mysql = require('mysql2/promise');
 const fs = require('fs');
-const KnexSessionStore = require('connect-session-knex')(session);
+const KnexSessionStore = require('connect-session-knex');
 
 // Configuração do banco de dados MySQL
 const pool = mysql.createPool({
@@ -71,9 +71,9 @@ app.use(cors({
 const sessionStore = new KnexSessionStore({
     knex,
     tablename: 'sessions',
-    createtable: true, // cria automaticamente a tabela de sessões
+    createtable: true,
     sidfieldname: 'sid',
-    clearInterval: 60000 // limpa sessões expiradas a cada minuto
+    clearInterval: 60000
   });
 
   app.use(session({
