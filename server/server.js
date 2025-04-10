@@ -58,7 +58,20 @@ app.use(cors({
   
 // 3. Configuração de sessão (usando store MySQL)
 const MySQLStore = require('express-mysql-session')(session);
-const sessionStore = new MySQLStore({}, pool);
+const sessionStore = new MySQLStore({
+    clearExpired: true,
+    checkExpirationInterval: 900000,
+    expiration: 86400000,
+    createDatabaseTable: true,
+    schema: {
+        tableName: 'sessions',
+        columnNames: {
+            session_id: 'session_id',
+            expires: 'expires',
+            data: 'data'
+        }
+    }
+}, pool);
 
 app.use(session({
     name: 'connect.sid', // ✅ Define o nome correto do cookie
