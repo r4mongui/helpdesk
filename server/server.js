@@ -61,17 +61,18 @@ const MySQLStore = require('express-mysql-session')(session);
 const sessionStore = new MySQLStore({}, pool);
 
 app.use(session({
+    name: 'connect.sid', // ✅ Define o nome correto do cookie
     secret: 'grupo_concresul',
-    store: sessionStore, // se estiver usando express-mysql-session
+    store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true,           // ✅ obrigatoriamente true em produção (https)
+      secure: true,           // ✅ obrigatório para HTTPS
       httpOnly: true,
-      sameSite: 'none',       // ✅ ESSENCIAL para domínios diferentes (cross-site)
+      sameSite: 'none',       // ✅ obrigatório para domínios diferentes
       maxAge: 24 * 60 * 60 * 1000
     }
-  }));
+}));
 
 // 4. Middleware para servir arquivos estáticos
 const staticOptions = {
