@@ -60,12 +60,21 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
-app.use(cors({
-    origin: 'https://app.grupoconcresul.com.br', // ✅ sem colchetes
+const corsOptions = {
+    origin: 'https://app.grupoconcresul.com.br',
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    optionsSuccessStatus: 200 // ✅ evita problemas com navegadores mais antigos
-  }));
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Cookie' // ⬅️ adiciona isso!
+    ],
+    exposedHeaders: ['Set-Cookie'], // ⬅️ permite que o navegador veja o Set-Cookie
+    optionsSuccessStatus: 200
+  };
+
+app.use(cors(corsOptions));
   
 // 3. Configuração de sessão (usando store MySQL)
 const sessionStore = new KnexSessionStore({
