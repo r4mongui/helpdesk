@@ -215,20 +215,20 @@ app.post('/api/login', async (req, res) => {
 
         if (rows.length > 0) {
             req.session.codUsuario = rows[0].CODUSUARIO;
-            
+
             req.session.save(err => {
-                if (err) {
-                    console.error("Erro ao salvar sessão:", err);
-                    return res.status(500).json({ 
-                        success: false, 
-                        message: "Erro interno no servidor" 
-                    });
-                }
-                res.json({ 
-                    success: true,
-                    message: "Login bem-sucedido"
+            if (err) {
+                console.error("Erro ao salvar sessão:", err);
+                return res.status(500).json({
+                success: false,
+                message: "Erro interno ao salvar a sessão"
                 });
-                console.log('Sessão salva para o usuário:', req.session);
+            }
+
+            res.json({
+                success: true,
+                message: "Login bem-sucedido"
+            });
             });
         } else {
             res.status(401).json({ 
