@@ -50,11 +50,11 @@ app.use(express.urlencoded({ extended: true }));
 
 // 2. Configuração de CORS
 app.use(cors({
-    origin: ['https://app.grupoconcresul.com.br', 'http://localhost:3000'],
-    credentials: true,
+    origin: ['https://app.grupoconcresul.com.br'], // ou '*', mas melhor ser específico
+    credentials: true,                             // ✅ permite enviar cookies
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
-}));
+  }));
 
 // 3. Configuração de sessão (usando store MySQL)
 const MySQLStore = require('express-mysql-session')(session);
@@ -62,13 +62,13 @@ const sessionStore = new MySQLStore({}, pool);
 
 app.use(session({
     secret: 'grupo_concresul',
-    store: sessionStore,
+    store: sessionStore, // se estiver usando express-mysql-session
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: true, // precisa ser true para produção (https)
+      secure: true,           // ✅ obrigatoriamente true em produção (https)
       httpOnly: true,
-      sameSite: 'none', // isso é ESSENCIAL para cookies cross-domain
+      sameSite: 'none',       // ✅ ESSENCIAL para domínios diferentes (cross-site)
       maxAge: 24 * 60 * 60 * 1000
     }
   }));
@@ -324,7 +324,7 @@ app.post('/api/logout', (req, res) => {
 });
 
 app.get('/api/check-auth', (req, res) => {
-    if (req.session.codUsuario) {
+    if (req.session && req.session.codUsuario) {
         res.json({ authenticated: true });
     } else {
         res.status(401).json({ authenticated: false });
