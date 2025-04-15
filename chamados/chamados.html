@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Chamados - Grupo Concresul</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="../dashboard/dashboard.css">
+    <link rel="stylesheet" href="chamados.css">
+    <link rel="shortcut icon" href="../images/grupoconcresul.ico" type="image/x-icon">
+    <script src="../utils/authGuard.js"></script>
+</head>
+<body>
+    <div aria-live="polite" class="sr-only"></div>
+    <nav class="nav-lateral">
+        <div class="nav-header">
+            <a href="../dashboard/dashboard.html">
+                <h1>GRUPO<br>CONCRESUL</h1>
+            </a>
+            <button class="toggle-btn" aria-label="Abrir/Fechar menu" aria-expanded="false">
+                <i class="fas fa-bars"></i>
+            </button>        
+        </div>
+        <ul>
+            <li><a href="../dashboard/dashboard.php"><i class="fas fa-home"></i><span>Início</span></a></li>
+            <li><a href="chamados.html" class="active" aria-current="page"><i class="fas fa-book"></i><span>Chamados</span></a></li>
+        </ul>        
+    </nav>
+
+    <header>
+        <nav class="nav-principal">
+            <h1><i class="fas fa-book"></i> Meus Chamados</h1>
+            <ul>
+                <li class="perfil">
+                    <button class="perfil-trigger" aria-haspopup="true" aria-expanded="false" aria-controls="submenu-perfil">
+                        <i class="fas fa-user"></i> Perfil <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <ul class="submenu" id="submenu-perfil">
+                        <li><a href="../dados-cadastrais/dados-cadastrais.html">Meus Dados</a></li>
+                        <li><a href="../password/password.html">Redefinir Senha</a></li>
+                        <li><a href="../utils/logout.php" id="logout-link">Sair</a></li>
+                    </ul>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filterStatus">Status:</label>
+                <select id="filterStatus" name="status" aria-label="Filtrar por status">
+                    <option value="all">Todos os status</option>
+                    <option value="1">Aberto</option>
+                    <option value="2">Em andamento</option>
+                    <option value="3">Resolvido</option>
+                    <option value="4">Fechado</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="filterUrgency">Urgência:</label>
+                <select id="filterUrgency" name="urgency" aria-label="Filtrar por urgência">
+                    <option value="all">Todas as urgências</option>
+                    <option value="1">Baixa</option>
+                    <option value="2">Média</option>
+                    <option value="3">Alta</option>
+                    <option value="4">Crítica</option>
+                </select>
+            </div>
+
+            <div>
+                <button id="refreshBtn" class="refresh-button" title="Atualizar Chamados">
+                    <i class="fas fa-sync-alt"></i> Atualizar
+                </button>
+            </div>
+        </div>
+        
+        <div class="chamados-container" id="chamadosContainer">
+            <div class="loading">Carregando chamados...</div>
+        </div>
+    </main>
+
+    <!-- Modal de detalhes do chamado -->
+    <div class="modal-overlay" id="chamadoModal">
+        <div class="modal-content">
+            <span class="modal-close" id="modalClose">&times;</span>
+            <div class="chamado-detalhes" id="chamadoDetalhes">
+                <!-- Conteúdo será preenchido via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da barra lateral
+            const toggleBtn = document.querySelector('.toggle-btn');
+            const navLateral = document.querySelector('.nav-lateral');
+            const mainContent = document.querySelector('main');
+            const header = document.querySelector('header');
+            
+            // Elementos do menu de perfil
+            const perfilTrigger = document.querySelector('.perfil-trigger');
+            const submenuPerfil = document.getElementById('submenu-perfil');
+            
+            // Verifica estado colapsado do localStorage
+            const isCollapsed = localStorage.getItem('navCollapsed') === 'true';
+            
+            // Aplica estado inicial
+            if (isCollapsed) {
+                navLateral.classList.add('collapsed');
+                adjustContentLayout(true);
+            }
+            
+            // Evento para colapsar/expandir barra lateral
+            toggleBtn.addEventListener('click', function() {
+                navLateral.classList.toggle('collapsed');
+                const currentlyCollapsed = navLateral.classList.contains('collapsed');
+                
+                localStorage.setItem('navCollapsed', currentlyCollapsed);
+                adjustContentLayout(currentlyCollapsed);
+                this.setAttribute('aria-expanded', !currentlyCollapsed);
+            });
+            
+            // Evento para abrir/fechar submenu do perfil
+            perfilTrigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const isExpanded = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', !isExpanded);
+                submenuPerfil.classList.toggle('active', !isExpanded);
+            });
+            
+            // Fechar submenu quando clicar fora
+            document.addEventListener('click', function(e) {
+                if (!perfilTrigger.contains(e.target) && !submenuPerfil.contains(e.target)) {
+                    submenuPerfil.classList.remove('active');
+                    perfilTrigger.setAttribute('aria-expanded', 'false');
+                }
+            });
+            
+            // Impedir que submenu feche quando clicar nele
+            submenuPerfil.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+
+            // Função para carregar chamados
+            function carregarChamados() {
+                const container = document.getElementById('chamadosContainer');
+                container.innerHTML = '<div class="loading">Carregando chamados...</div>';
+                
+                const status = document.getElementById('filterStatus').value;
+                const urgencia = document.getElementById('filterUrgency').value;
+                
+                fetch(`get_chamados.php?status=${status}&urgency=${urgencia}&t=${Date.now()}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.text().then(text => {
+                                throw new Error(`HTTP error! status: ${response.status}, response: ${text}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Dados recebidos:', data);
+                        if (data && data.success) {
+                            exibirChamados(data.data);
+                        } else {
+                            throw new Error(data?.message || 'Resposta inválida do servidor');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro completo:', error);
+                        container.innerHTML = `
+                            <div class="error">
+                                <p>Erro ao carregar chamados</p>
+                                <p>${error.message}</p>
+                            </div>
+                        `;
+                    });
+            }
+        
+            // Função para exibir chamados
+            function exibirChamados(chamados) {
+                const container = document.getElementById('chamadosContainer');
+                
+                if (chamados.length === 0) {
+                    container.innerHTML = '<div class="no-results">Nenhum chamado encontrado</div>';
+                    return;
+                }
+                
+                let html = '';
+                
+                chamados.forEach(chamado => {
+                    html += `
+                        <div class="chamado-card" data-id="${chamado.id}">
+                            <div class="chamado-header">
+                                <h3>${chamado.titulo}</h3>
+                                <span class="status-badge ${chamado.status.class}">${chamado.status.text}</span>
+                            </div>
+                            <div class="chamado-body">
+                                <p><strong>Descrição:</strong> ${chamado.descricao.substring(0, 100)}${chamado.descricao.length > 100 ? '...' : ''}</p>
+                                <div class="chamado-meta">
+                                    <span><strong>Data:</strong> ${chamado.dataCriacao}</span>
+                                    <span class="urgencia ${chamado.urgencia.class}">${chamado.urgencia.text}</span>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+                // Adiciona eventos de clique aos cards de chamado
+                document.querySelectorAll('.chamado-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const chamadoId = this.getAttribute('data-id');
+                        abrirModalDetalhes(chamadoId);
+                    });
+                });
+            }
+        
+            // Função para abrir modal de detalhes
+            function abrirModalDetalhes(idChamado) {
+                const modal = document.getElementById('chamadoModal');
+                const modalContent = document.getElementById('chamadoDetalhes');
+                
+                modalContent.innerHTML = '<div class="loading">Carregando detalhes...</div>';
+                modal.classList.add('active');
+                
+                fetch(`get_chamado_detalhes.php?id=${idChamado}`)
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Erro HTTP! status: ${response.status}`);
+                        }
+                        
+                        const contentType = response.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            return response.text().then(text => {
+                                throw new Error(`Resposta não é JSON: ${text.substring(0, 100)}...`);
+                            });
+                        }
+                        
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data && data.success) {
+                            const chamado = data.data;
+                            modalContent.innerHTML = `
+                                <h2>${chamado.titulo}</h2>
+                                <div class="chamado-info">
+                                    <p><strong>Status:</strong> <span class="${chamado.status.class}">${chamado.status.text}</span></p>
+                                    <p><strong>Urgência:</strong> <span class="${chamado.urgencia.class}">${chamado.urgencia.text}</span></p>
+                                    <p><strong>Criado em:</strong> ${chamado.dataCriacao}</p>
+                                    ${chamado.dataConclusao !== '-' ? `<p><strong>Concluído em:</strong> ${chamado.dataConclusao}</p>` : ''}
+                                </div>
+                                <div class="chamado-descricao">
+                                    <h3>Descrição:</h3>
+                                    <p>${chamado.descricao}</p>
+                                </div>
+                                ${chamado.resolucao ? `
+                                <div class="chamado-resolucao">
+                                    <h3>Resolução:</h3>
+                                    <p>${chamado.resolucao}</p>
+                                </div>` : ''}
+                                ${chamado.imagem ? `
+                                    <div class="chamado-imagem">
+                                        <img src="${chamado.imagem}" alt="Imagem do chamado">
+                                    </div>
+                                ` : ''}
+                            `;
+                        } else {
+                            const errorMsg = data?.message || 'Resposta inválida do servidor';
+                            modalContent.innerHTML = `
+                                <div class="error">
+                                    <p>Erro ao carregar detalhes do chamado</p>
+                                    <p>${errorMsg}</p>
+                                    <p>ID do chamado: ${idChamado}</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Erro completo:', error);
+                        modalContent.innerHTML = `
+                            <div class="error">
+                                <p>Erro ao carregar detalhes</p>
+                                <p>${error.message}</p>
+                                <p>ID do chamado: ${idChamado}</p>
+                                <p>Verifique o console para mais detalhes</p>
+                            </div>
+                        `;
+                    });
+            }
+        
+            // Fechar modal quando clicar no botão de fechar
+            document.getElementById('modalClose').addEventListener('click', function() {
+                document.getElementById('chamadoModal').classList.remove('active');
+            });
+        
+            // Fechar modal quando clicar fora do conteúdo
+            document.getElementById('chamadoModal').addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.classList.remove('active');
+                }
+            });
+        
+            // Event listeners para filtros e botão de atualizar
+            document.getElementById('filterStatus').addEventListener('change', carregarChamados);
+            document.getElementById('filterUrgency').addEventListener('change', carregarChamados);
+            document.getElementById('refreshBtn').addEventListener('click', carregarChamados);
+        
+            // Carregar chamados inicialmente
+            carregarChamados();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meus Dados</title>
+    <link rel="stylesheet" href="dados-cadastrais.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="shortcut icon" href="../images/grupoconcresul.ico" type="image/x-icon">
+    <script src="../utils/authGuard.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="cabecalho">
+            <nav>
+                <a href="../dashboard/dashboard.php"><i class="fas fa-arrow-left"></i> VOLTAR</a>
+            </nav>
+            <header>
+                <h1>Meus Dados</h1>
+            </header>
+        </div>
+
+        <main>
+            <div class="card foto-perfil">
+                <div class="foto-container">
+                    <div class="foto-wrapper">
+                        <img id="fotoUsuario" src="" alt="Foto do usuário">
+                        <label for="uploadFoto" class="btn-upload">
+                            <i class="fas fa-camera"></i> Alterar foto
+                        </label>
+                        <input type="file" id="uploadFoto" accept="image/*" style="display: none;">
+                    </div>
+                    <div class="info-usuario">
+                        <h2 id="nomeUsuario"></h2>
+                        <p id="cargoUsuario"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="card dados-cadastrais">
+                <form id="dadosForm">
+                    <div class="form-group">
+                        <label for="usuario">Usuário:</label>
+                        <input type="text" id="usuario" name="usuario" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="nome">Nome:</label>
+                        <input type="text" id="nome" name="nome" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="departamento">Departamento:</label>
+                        <input type="text" id="departamento" name="departamento" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">E-Mail:</label>
+                        <input type="email" id="email" name="email" readonly>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="telefone">Telefone:</label>
+                        <input type="text" id="telefone" name="telefone" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="cpf">CPF:</label>
+                        <input type="text" id="cpf" name="cpf" required>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="btnSalvar" class="btn primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </main>
+    </div>
+    <script>
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('get_usuarios.php', {
+        credentials: 'include'
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            const u = data.data;
+            document.getElementById('usuario').value = u.USUARIO;
+            document.getElementById('nome').value = u.NOME;
+            document.getElementById('departamento').value = u.DEPARTAMENTO || '';
+            document.getElementById('email').value = u.EMAIL;
+            document.getElementById('telefone').value = u.TELEFONE || '';
+            document.getElementById('cpf').value = u.CPF || '';
+            document.getElementById('nomeUsuario').textContent = u.NOME;
+            document.getElementById('cargoUsuario').textContent = u.USUARIO;
+            
+            // Verifica se há foto de perfil, se não, gera o avatar
+            if (u.FOTO) {
+                document.getElementById('fotoUsuario').src = '../' + u.FOTO;
+            } else {
+                const avatar = gerarAvatarIniciais(u.NOME);
+                document.getElementById('fotoUsuario').src = avatar;
+            }
+        } else {
+            alert('Erro ao carregar dados do usuário.');
+        }
+    })
+    .catch(() => alert('Erro na comunicação com o servidor.'));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+    const telefoneInput = document.getElementById('telefone');
+    const cpfInput = document.getElementById('cpf');
+
+    telefoneInput.addEventListener('input', () => {
+        let v = telefoneInput.value.replace(/\D/g, '');
+        v = v.replace(/^(\d{2})(\d)/g, '($1) $2');
+        v = v.replace(/(\d{5})(\d{4})$/, '$1-$2');
+        telefoneInput.value = v;
+    });
+
+    cpfInput.addEventListener('input', () => {
+        let v = cpfInput.value.replace(/\D/g, '');
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d)/, '$1.$2');
+        v = v.replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+        cpfInput.value = v;
+    });
+});
+
+document.getElementById('dadosForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    const telefone = document.getElementById('telefone').value.trim();
+    const cpf = document.getElementById('cpf').value.trim();
+
+    const formData = new FormData();
+    formData.append('telefone', telefone);
+    formData.append('cpf', cpf);
+
+    fetch('atualizar_dados.php', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        alert(data.message);
+    })
+    .catch(() => {
+        alert('Erro ao salvar dados.');
+    });
+});
+document.getElementById('uploadFoto').addEventListener('change', function () {
+    const file = this.files[0];
+    if (!file) return;
+
+    const formData = new FormData();
+    formData.append('foto', file);
+
+    fetch('../dados-cadastrais/upload_foto.php', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            document.getElementById('fotoUsuario').src = '../' + data.foto;
+        } else {
+            alert(data.message || 'Erro ao enviar imagem');
+        }
+    })
+    .catch(() => {
+        alert('Erro na comunicação com o servidor');
+    });
+});
+
+function gerarAvatarIniciais(nome) {
+    const iniciais = nome.trim().split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+    const canvas = document.createElement('canvas');
+    canvas.width = 100;
+    canvas.height = 100;
+    const ctx = canvas.getContext('2d');
+
+    // Fundo
+    ctx.fillStyle = '#007BFF';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Texto
+    ctx.font = 'bold 40px Arial';
+    ctx.fillStyle = '#fff';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(iniciais, canvas.width / 2, canvas.height / 2);
+
+    return canvas.toDataURL();
+}
+</script>
+</body>
+</html>
