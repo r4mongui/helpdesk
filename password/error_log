@@ -1,0 +1,34 @@
+[11-Apr-2025 21:48:11 America/Fortaleza] PHP Warning:  Undefined array key "CODUSUARIO" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 12
+[11-Apr-2025 21:48:11 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:31
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 31
+[11-Apr-2025 21:48:21 America/Fortaleza] PHP Warning:  Undefined array key "CODUSUARIO" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 12
+[11-Apr-2025 21:48:21 America/Fortaleza] PHP Warning:  Undefined array key "senha_atual" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 13
+[11-Apr-2025 21:48:21 America/Fortaleza] PHP Warning:  Undefined array key "nova_senha" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 14
+[11-Apr-2025 21:48:21 America/Fortaleza] PHP Warning:  Undefined array key "confirmar_senha" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 15
+[11-Apr-2025 21:48:48 America/Fortaleza] PHP Warning:  Undefined array key "CODUSUARIO" in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 12
+[11-Apr-2025 21:48:48 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:31
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 31
+[11-Apr-2025 21:49:51 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:31
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 31
+[11-Apr-2025 21:51:13 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:31
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 31
+[11-Apr-2025 21:53:58 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:31
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 31
+[11-Apr-2025 21:55:14 America/Fortaleza] PHP Fatal error:  Uncaught Error: Call to undefined method PDOStatement::bind_param() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:32
+Stack trace:
+#0 {main}
+
+Next Error: Call to undefined method PDO::close() in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php:62
+Stack trace:
+#0 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/password/alterar-senha.php on line 62

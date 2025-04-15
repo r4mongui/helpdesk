@@ -1,0 +1,50 @@
+[14-Apr-2025 09:33:12 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:33:15 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:33:16 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:33:20 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:34:10 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:35:20 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php:9
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php(9): PDOStatement->execute()
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/get_chamados.php on line 9
+[14-Apr-2025 09:59:18 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php:14
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php(14): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php on line 14
+[14-Apr-2025 11:41:16 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php:14
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php(14): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php on line 14
+[14-Apr-2025 11:41:19 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php:14
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php(14): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/delete_chamado.php on line 14
+[14-Apr-2025 11:42:09 America/Fortaleza] PHP Fatal error:  Uncaught PDOException: SQLSTATE[42S02]: Base table or view not found: 1146 Table 'concresu_helpdesk.CHAMADOS' doesn't exist in /home4/concresu/app.grupoconcresul.com.br/admin/update_chamado.php:18
+Stack trace:
+#0 /home4/concresu/app.grupoconcresul.com.br/admin/update_chamado.php(18): PDOStatement->execute(Array)
+#1 {main}
+  thrown in /home4/concresu/app.grupoconcresul.com.br/admin/update_chamado.php on line 18
