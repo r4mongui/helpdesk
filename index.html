@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="login.css">
+    <link rel="shortcut icon" href="../images/grupoconcresul.ico" type="image/x-icon">
+    <title>Entrar</title>
+</head>
+<body>
+    <div class="login">
+        <img src="../images/logo_grupoconcresul.png" alt="Grupo Concresul - Logo">
+        <form id="loginForm">
+            <input type="text" id="usuario" placeholder="Usuário" required autocomplete="username">
+            <input type="password" id="senha" placeholder="Senha" required autocomplete="current-password">
+            <button type="submit">ENTRAR</button>
+        </form>
+    </div>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+
+    const usuario = document.getElementById('usuario').value.trim();
+    const senha = document.getElementById('senha').value.trim();
+
+    if (!usuario || !senha) {
+        alert("Preencha todos os campos.");
+        return;
+    }
+
+    try {
+        const response = await fetch('login.php', {
+            method: 'POST',
+            headers: { 
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ usuario, senha }),
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            // Redireciona para o dashboard na subpasta
+            window.location.href = 'dashboard/dashboard.php';
+        } else {
+            alert(data.message || 'Credenciais inválidas');
+        }
+    } catch (error) {
+        console.error('Erro:', error);
+        alert('Erro ao conectar com o servidor');
+    }
+});
+</script>
+</body>
+</html>
