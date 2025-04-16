@@ -118,10 +118,15 @@
                     <label for="userName">Nome Completo *</label>
                     <input type="text" id="userName" required>
                 </div>
-                
+
                 <div class="form-group">
                     <label for="userEmail">E-mail *</label>
                     <input type="email" id="userEmail" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userDepartamento">Departamento *</label>
+                    <input type="departamento" id="userDepartamento" required>
                 </div>
                 
                 <div class="form-group">
@@ -139,6 +144,11 @@
                         <option value="1">Ativo</option>
                         <option value="0">Inativo</option>
                     </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userUsername">Nome de Usuário</label>
+                    <input type="text" id="userUsername" readonly>
                 </div>
                 
                 <div class="form-group">
@@ -167,76 +177,83 @@
         </div>
     </div>
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos da tabela
-    const usersTable = document.getElementById('usersTable').getElementsByTagName('tbody')[0];
-    const addUserBtn = document.getElementById('addUserBtn');
-    const userModal = document.getElementById('userModal');
-    const closeModal = document.getElementById('closeModal');
-    const saveUserBtn = document.getElementById('saveUserBtn');
-    const modalTitle = document.getElementById('modalTitle');
-    
-    // Filtros
-    const typeFilter = document.getElementById('typeFilter');
-    const statusFilter = document.getElementById('statusFilter');
-    const searchFilter = document.getElementById('searchFilter');
-    
-    // Modal fields
-    const userIdField = document.getElementById('userId');
-    const userNameField = document.getElementById('userName');
-    const userEmailField = document.getElementById('userEmail');
-    const userTypeField = document.getElementById('userType');
-    const userStatusField = document.getElementById('userStatus');
-    const userPasswordField = document.getElementById('userPassword');
-    const confirmPasswordField = document.getElementById('confirmPassword');
-    const userPhotoField = document.getElementById('userPhoto');
-    const photoPreview = document.getElementById('photoPreview');
-    
-    let isEditing = false;
-    let currentPhoto = null;
-
-    // Carregar usuários
-    function loadUsers() {
-        // Obter valores dos filtros
-        const filters = {
-            administrador: typeFilter.value,
-            status: statusFilter.value,
-            search: searchFilter.value.trim()
-        };
-
-        // Criar URLSearchParams e adicionar apenas valores não vazios
-        const params = new URLSearchParams();
-        params.append('action', 'list');
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elementos da tabela
+            const usersTable = document.getElementById('usersTable').getElementsByTagName('tbody')[0];
+            const addUserBtn = document.getElementById('addUserBtn');
+            const userModal = document.getElementById('userModal');
+            const closeModalBtn = document.getElementById('closeModal');
+            const saveUserBtn = document.getElementById('saveUserBtn');
+            const modalTitle = document.getElementById('modalTitle');
+            
+            // Filtros
+            const typeFilter = document.getElementById('typeFilter');
+            const statusFilter = document.getElementById('statusFilter');
+            const searchFilter = document.getElementById('searchFilter');
+            
+            // Campos do modal
+            const userIdField = document.getElementById('userId');
+            const userNameField = document.getElementById('userName');
+            const userEmailField = document.getElementById('userEmail');
+            const userDepartamentoField = document.getElementById('userDepartamento')
+            const userTypeField = document.getElementById('userType');
+            const userStatusField = document.getElementById('userStatus');
+            const userPasswordField = document.getElementById('userPassword');
+            const confirmPasswordField = document.getElementById('confirmPassword');
+            const userPhotoField = document.getElementById('userPhoto');
+            const photoPreview = document.getElementById('photoPreview');
+            
+            let isEditing = false;
+            let currentPhoto = null;
         
-        if (filters.administrador !== '') {
-            params.append('administrador', filters.administrador);
-        }
+            // Carregar usuários
+            function loadUsers() {
+                const filters = {
+                    administrador: typeFilter.value,
+                    status: statusFilter.value,
+                    search: searchFilter.value.trim()
+                };
         
-        if (filters.status !== '') {
-            params.append('status', filters.status);
-        }
-        
-        if (filters.search !== '') {
-            params.append('search', filters.search);
-        }
-
-        // Fazer a requisição
-        fetch(`usuarios.php?${params.toString()}`)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Erro HTTP: ${response.status}`);
+                const params = new URLSearchParams();
+                params.append('action', 'list');
+                
+                if (filters.administrador !== '') {
+                    params.append('administrador', filters.administrador);
                 }
-                return response.json();
-            })
-            .then(data => {
+                
+                if (filters.status !== '') {
+                    params.append('status', filters.status);
+                }
+                
+                if (filters.search !== '') {
+                    params.append('search', filters.search);
+                }
+        
+                fetch(`usuarios.php?${params.toString()}`)
+                    .then(response => {
+                        if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                        return response.json();
+                    })
+                    .then(data => {
+                        renderUsersTable(data);
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar usuários:', error);
+                        alert('Erro ao carregar usuários: ' + error.message);
+                    });
+            }
+        
+            // Renderizar tabela de usuários
+            function renderUsersTable(users) {
                 usersTable.innerHTML = '';
-                data.forEach(user => {
+                users.forEach(user => {
                     const row = usersTable.insertRow();
                     
                     row.innerHTML = `
                         <td>${user.CODUSUARIO}</td>
                         <td>${user.NOME}</td>
                         <td>${user.EMAIL}</td>
+                        <td>${user.DEPARTAMENTO}</td>
                         <td>${user.ADMINISTRADOR ? 'Sim' : 'Não'}</td>
                         <td><span class="status-badge ${user.STATUS ? 'active' : 'inactive'}">
                             ${user.STATUS ? 'Ativo' : 'Inativo'}
@@ -261,237 +278,260 @@ document.addEventListener('DOMContentLoaded', function() {
                 document.querySelectorAll('.btn-delete').forEach(btn => {
                     btn.addEventListener('click', () => deleteUser(btn.dataset.id));
                 });
-            })
-            .catch(error => {
-                console.error('Erro ao carregar usuários:', error);
-                alert('Erro ao carregar usuários. Verifique o console para detalhes.');
-            });
-    }
-    
-    // Função para formatar data
-    function formatDate(dateString) {
-        if (!dateString) return '';
-        const date = new Date(dateString);
-        return date.toLocaleDateString('pt-BR') + ' ' + date.toLocaleTimeString('pt-BR');
-    }
-    
-    // Abrir modal para novo usuário
-    addUserBtn.addEventListener('click', () => {
-        isEditing = false;
-        modalTitle.textContent = 'Novo Usuário';
-        userIdField.value = '';
-        userNameField.value = '';
-        userEmailField.value = '';
-        userTypeField.value = '0'; // Padrão para não administrador
-        userStatusField.value = '1'; // Padrão para ativo
-        userPasswordField.value = '';
-        confirmPasswordField.value = '';
-        photoPreview.src = '';
-        currentPhoto = null;
-        userPhotoField.value = ''; // Limpar input de arquivo
+            }
         
-        userModal.style.display = 'block';
-    });
-    
-    // Fechar modal
-    closeModal.addEventListener('click', () => {
-        userModal.style.display = 'none';
-    });
-    
-    // Editar usuário
-    function editUser(userId) {
-        const params = new URLSearchParams();
-        params.append('action', 'list');
-        params.append('CODUSUARIO', userId); // Alterado de 'search' para 'CODUSUARIO'
-    
-        fetch(`usuarios.php?${params.toString()}`)
-            .then(response => {
-                if (!response.ok) throw new Error('Erro na resposta do servidor');
-                return response.json();
-            })
-            .then(data => {
-                if (!data || data.length === 0) {
-                    throw new Error('Usuário não encontrado');
-                }
-                
-                const user = data[0];
-                isEditing = true;
-                modalTitle.textContent = 'Editar Usuário';
-                userIdField.value = user.CODUSUARIO;
-                userNameField.value = user.NOME;
-                userEmailField.value = user.EMAIL;
-                userTypeField.value = user.ADMINISTRADOR ? '1' : '0';
-                userStatusField.value = user.STATUS ? '1' : '0';
+            // Função para formatar data
+            function formatDate(dateString) {
+                if (!dateString) return '';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('pt-BR');
+            }
+        
+            // Abrir modal para novo usuário
+            addUserBtn.addEventListener('click', () => {
+                isEditing = false;
+                resetModalForm();
+                modalTitle.textContent = 'Novo Usuário';
+                openModal();
+            });
+        
+            // Fechar modal
+            closeModalBtn.addEventListener('click', closeModal);
+        
+            // Resetar formulário do modal
+            function resetModalForm() {
+                userIdField.value = '';
+                userNameField.value = '';
+                userEmailField.value = '';
+                userDepartamentoField.value = '';
+                userTypeField.value = '0';
+                userStatusField.value = '1';
                 userPasswordField.value = '';
                 confirmPasswordField.value = '';
-                userPhotoField.value = ''; // Limpar input de arquivo
+                photoPreview.src = '../images/avatar-placeholder.png';
+                currentPhoto = null;
+                userPhotoField.value = '';
+            }
+        
+                // Editar usuário
+                function editUser(userId) {
+                    const params = new URLSearchParams();
+                    params.append('action', 'getUser');
+                    params.append('id', userId);
+                    
+                    fetch(`usuarios.php?${params.toString()}`)
+                        .then(response => {
+                            if (!response.ok) throw new Error('Erro na resposta do servidor');
+                            return response.json();
+                        })
+                        .then(user => {
+                            if (!user || user.error) throw new Error(user?.error || 'Dados inválidos');
+                            
+                            // Preencher formulário com TODOS os dados do usuário
+                            isEditing = true;
+                            modalTitle.textContent = 'Editar Usuário';
+                            userIdField.value = user.CODUSUARIO;
+                            userNameField.value = user.NOME || '';
+                            userEmailField.value = user.EMAIL || '';
+                            userDepartamentoField.value = user.DEPARTAMENTO || '';
+                            userTypeField.value = user.ADMINISTRADOR ? '1' : '0';
+                            userStatusField.value = user.STATUS ? '1' : '0';
+                            
+                            // Adicionar esta linha para carregar o USUARIO
+                            document.getElementById('userUsername').value = user.USUARIO || '';
+                            
+                            // Foto do usuário
+                            photoPreview.src = user.FOTO || '../images/avatar-placeholder.png';
+                            currentPhoto = user.FOTO || null;
+                            
+                            openModal();
+                        })
+                        .catch(error => {
+                            console.error('Erro ao carregar usuário:', error);
+                            alert('Erro ao carregar usuário: ' + error.message);
+                        });
+                }
+            
+            function getUsernameFromEmail(email) {
+                if (!email) return '';
+                return email.split('@')[0].toLowerCase();
+            }
+        
+            // Salvar usuário
+            saveUserBtn.addEventListener('click', saveUser);
+            
+            function saveUser() {
+                if (!validateForm()) return;
                 
-                if (user.FOTO) {
-                    photoPreview.src = user.FOTO;
-                    currentPhoto = user.FOTO;
-                } else {
-                    photoPreview.src = '../images/avatar-placeholder.png'; // Imagem padrão
-                    currentPhoto = null;
+                const userData = {
+                    CODUSUARIO: userIdField.value,
+                    NOME: userNameField.value.trim(),
+                    EMAIL: userEmailField.value.trim(),
+                    DEPARTAMENTO: userDepartamentoField.value.trim(),
+                    USUARIO: document.getElementById('userUsername').value.trim(), // Pega o valor do campo
+                    ADMINISTRADOR: userTypeField.value === '1',
+                    STATUS: userStatusField.value === '1',
+                    SENHA: userPasswordField.value,
+                    CONFIRMACAO_SENHA: confirmPasswordField.value,
+                    FOTO: currentPhoto
+                };
+                
+                const url = isEditing ? 'usuarios.php?action=update' : 'usuarios.php?action=create';
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Usuário salvo com sucesso!');
+                        closeModal();
+                        loadUsers();
+                    } else {
+                        throw new Error(data.error || 'Erro ao salvar usuário');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro: ' + error.message);
+                });
+            }
+        
+            // Validar formulário
+            function validateForm() {
+                if (!userNameField.value.trim()) {
+                    alert('O nome é obrigatório');
+                    return false;
                 }
                 
-                userModal.style.display = 'block';
-            })
-            .catch(error => {
-                console.error('Erro ao carregar usuário:', error);
-                alert('Erro ao carregar usuário: ' + error.message);
-            });
-    }
-    
-    // Salvar usuário (criar ou atualizar)
-    saveUserBtn.addEventListener('click', () => {
-        // Validações básicas
-        if (!userNameField.value.trim()) {
-            alert('O nome é obrigatório');
-            return;
-        }
-        
-        if (!userEmailField.value.trim() || !isValidEmail(userEmailField.value)) {
-            alert('Por favor, insira um e-mail válido');
-            return;
-        }
-        
-        if (!isEditing && (!userPasswordField.value || userPasswordField.value.length < 6)) {
-            alert('A senha deve ter no mínimo 6 caracteres');
-            return;
-        }
-        
-        if (userPasswordField.value !== confirmPasswordField.value) {
-            alert('As senhas não coincidem');
-            return;
-        }
-        
-        const userData = {
-            CODUSUARIO: userIdField.value,
-            NOME: userNameField.value.trim(),
-            EMAIL: userEmailField.value.trim(),
-            ADMINISTRADOR: userTypeField.value === '1',
-            STATUS: userStatusField.value === '1',
-            SENHA: userPasswordField.value,
-            CONFIRMACAO_SENHA: confirmPasswordField.value,
-            FOTO: currentPhoto
-        };
-        
-        const url = isEditing ? 'usuarios.php?action=update' : 'usuarios.php?action=create';
-        
-        fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(userData)
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
+                if (!isValidEmail(userEmailField.value)) {
+                    alert('Por favor, insira um e-mail válido');
+                    return false;
+                }
+                
+                if (!isEditing && (!userPasswordField.value || userPasswordField.value.length < 6)) {
+                    alert('A senha deve ter no mínimo 6 caracteres');
+                    return false;
+                }
+                
+                if (userPasswordField.value !== confirmPasswordField.value) {
+                    alert('As senhas não coincidem');
+                    return false;
+                }
+                
+                return true;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert('Usuário salvo com sucesso!');
-                userModal.style.display = 'none';
-                loadUsers();
-            } else {
-                throw new Error(data.error || 'Erro ao salvar usuário');
+        
+            // Validar e-mail
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
             }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro: ' + error.message);
+        
+            // Abrir modal
+            function openModal() {
+                const modal = document.getElementById('userModal');
+                document.body.style.overflow = 'hidden';
+                document.documentElement.style.overflow = 'hidden';
+                modal.style.display = 'block';
+                modal.classList.add('show'); // Adiciona classe para animação se necessário
+            }
+        
+            // Fechar modal
+            function closeModal() {
+                const modal = document.getElementById('userModal');
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
+                modal.style.display = 'none';
+                modal.classList.remove('show');
+            }
+        
+            // Deletar usuário
+            function deleteUser(userId) {
+                if (!confirm('Tem certeza que deseja inativar este usuário?')) return;
+                
+                fetch('usuarios.php?action=delete', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ CODUSUARIO: userId })
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Usuário inativado com sucesso!');
+                        loadUsers();
+                    } else {
+                        throw new Error(data.error || 'Erro ao inativar usuário');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Erro: ' + error.message);
+                });
+            }
+        
+            // Upload de foto
+            userPhotoField.addEventListener('change', handlePhotoUpload);
+        
+            function handlePhotoUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                
+                // Verificar se é uma imagem
+                if (!file.type.match('image.*')) {
+                    alert('Por favor, selecione um arquivo de imagem (JPEG, PNG, etc.)');
+                    return;
+                }
+                
+                // Verificar tamanho do arquivo (máximo 2MB)
+                if (file.size > 2 * 1024 * 1024) {
+                    alert('A imagem deve ter no máximo 2MB');
+                    return;
+                }
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    photoPreview.src = e.target.result;
+                    currentPhoto = e.target.result;
+                };
+                reader.onerror = function() {
+                    alert('Erro ao ler o arquivo de imagem');
+                };
+                reader.readAsDataURL(file);
+            }
+        
+            // Aplicar filtros
+            typeFilter.addEventListener('change', loadUsers);
+            statusFilter.addEventListener('change', loadUsers);
+            searchFilter.addEventListener('input', debounce(loadUsers, 300));
+        
+            // Função auxiliar para debounce
+            function debounce(func, wait) {
+                let timeout;
+                return function() {
+                    const context = this, args = arguments;
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => {
+                        func.apply(context, args);
+                    }, wait);
+                };
+            }
+        
+            // Carregar usuários inicialmente
+            loadUsers();
         });
-    });
-    
-    // Validar e-mail
-    function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-    
-    // Deletar usuário
-    function deleteUser(userId) {
-        if (!confirm('Tem certeza que deseja inativar este usuário?')) {
-            return;
-        }
-        
-        fetch('usuarios.php?action=delete', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ CODUSUARIO: userId })
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`Erro HTTP: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success) {
-                alert('Usuário inativado com sucesso!');
-                loadUsers();
-            } else {
-                throw new Error(data.error || 'Erro ao inativar usuário');
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            alert('Erro: ' + error.message);
-        });
-    }
-    
-    // Upload de foto
-    userPhotoField.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-        
-        // Verificar se é uma imagem
-        if (!file.type.match('image.*')) {
-            alert('Por favor, selecione um arquivo de imagem (JPEG, PNG, etc.)');
-            return;
-        }
-        
-        // Verificar tamanho do arquivo (máximo 2MB)
-        if (file.size > 2 * 1024 * 1024) {
-            alert('A imagem deve ter no máximo 2MB');
-            return;
-        }
-        
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            photoPreview.src = e.target.result;
-            currentPhoto = e.target.result;
-        };
-        reader.onerror = function() {
-            alert('Erro ao ler o arquivo de imagem');
-        };
-        reader.readAsDataURL(file);
-    });
-    
-    // Aplicar filtros
-    typeFilter.addEventListener('change', loadUsers);
-    statusFilter.addEventListener('change', loadUsers);
-    searchFilter.addEventListener('input', debounce(loadUsers, 300));
-    
-    // Carregar usuários inicialmente
-    loadUsers();
-    
-    // Função auxiliar para debounce
-    function debounce(func, wait) {
-        let timeout;
-        return function() {
-            const context = this, args = arguments;
-            clearTimeout(timeout);
-            timeout = setTimeout(() => {
-                func.apply(context, args);
-            }, wait);
-        };
-    }
-});
     </script>
 </body>
 </html>
